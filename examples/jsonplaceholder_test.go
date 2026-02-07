@@ -7,8 +7,8 @@ import (
 
 	"github.com/nchursin/serenity-go/serenity/api"
 	"github.com/nchursin/serenity-go/serenity/core"
-	"github.com/nchursin/serenity-go/serenity/ensure"
 	"github.com/nchursin/serenity-go/serenity/expectations"
+	"github.com/nchursin/serenity-go/serenity/expectations/ensure"
 )
 
 // TestJSONPlaceholderPosts demonstrates basic CRUD operations with JSONPlaceholder

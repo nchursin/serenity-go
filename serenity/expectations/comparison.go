@@ -3,7 +3,7 @@ package expectations
 import (
 	"fmt"
 
-	"github.com/nchursin/serenity-go/serenity/ensure"
+	"github.com/nchursin/serenity-go/serenity/expectations/ensure"
 	"github.com/nchursin/serenity-go/serenity/expectations/utils"
 )
 

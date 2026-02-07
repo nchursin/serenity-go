@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/nchursin/serenity-go/serenity/ensure"
+	"github.com/nchursin/serenity-go/serenity/expectations/ensure"
 )
 
 // IsEmptyExpectation checks if a string is empty

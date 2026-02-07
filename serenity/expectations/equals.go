@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/nchursin/serenity-go/serenity/ensure"
+	"github.com/nchursin/serenity-go/serenity/expectations/ensure"
 )
 
 // EqualsExpectation checks if the actual value equals the expected value

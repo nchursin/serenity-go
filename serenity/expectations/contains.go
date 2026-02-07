@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/nchursin/serenity-go/serenity/ensure"
+	"github.com/nchursin/serenity-go/serenity/expectations/ensure"
 )
 
 // ContainsExpectation checks if a string contains the expected substring
