@@ -28,7 +28,7 @@ package main
 import (
     "testing"
     "github.com/stretchr/testify/require"
-    
+
     "github.com/nchursin/serenity-go/serenity/api"
     "github.com/nchursin/serenity-go/serenity/assertions"
     "github.com/nchursin/serenity-go/serenity/core"
@@ -39,21 +39,21 @@ func TestAPI(t *testing.T) {
     actor := core.NewActor("APITester").WhoCan(
         api.UsingURL("https://jsonplaceholder.typicode.com"),
     )
-    
+
     // Define test data
     newPost := map[string]interface{}{
         "title":  "Test Post",
         "body":   "This is a test post",
         "userId": 1,
     }
-    
+
     // Test the API
     err := actor.AttemptsTo(
         api.PostRequest("/posts").With(newPost),
         assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(201)),
         assertions.That(api.LastResponseBody{}).Is(assertions.Contains("Test Post")),
     )
-    
+
     require.NoError(t, err)
 }
 ```
@@ -308,7 +308,7 @@ This Go implementation follows the same design principles as Serenity/JS:
 This is an MVP implementation focused on API testing. Future enhancements may include:
 
 - [ ] Database testing abilities
-- [ ] gRPC testing support  
+- [ ] gRPC testing support
 - [ ] Advanced reporting capabilities
 - [ ] Integration with popular Go test frameworks
 - [ ] Web UI testing capabilities
@@ -318,5 +318,4 @@ This is an MVP implementation focused on API testing. Future enhancements may in
 Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## License
-
-MIT License - see LICENSE file for details.
+Apache 2.0 - see LICENSE file for details.
