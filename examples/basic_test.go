@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nchursin/serenity-go/serenity/api"
-	"github.com/nchursin/serenity-go/serenity/assertions"
 	"github.com/nchursin/serenity-go/serenity/core"
+	"github.com/nchursin/serenity-go/serenity/ensure"
+	"github.com/nchursin/serenity-go/serenity/expectations"
 )
 
 // TestJSONPlaceholderBasics demonstrates basic API testing with JSONPlaceholder
@@ -17,24 +18,24 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 	// Test GET posts - should return existing posts
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
-		assertions.That(api.LastResponseBody{}, assertions.Contains("title")),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+		ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
 	)
 	require.NoError(t, err)
 
 	// Test GET users - should return existing users
 	err = actor.AttemptsTo(
 		api.GetRequest("/users"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
-		assertions.That(api.LastResponseBody{}, assertions.Contains("email")),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+		ensure.That(api.LastResponseBody{}, expectations.Contains("email")),
 	)
 	require.NoError(t, err)
 
 	// Test GET specific post
 	err = actor.AttemptsTo(
 		api.GetRequest("/posts/1"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
-		assertions.That(api.LastResponseBody{}, assertions.Contains("sunt aut facere")),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+		ensure.That(api.LastResponseBody{}, expectations.Contains("sunt aut facere")),
 	)
 	require.NoError(t, err)
 }
@@ -46,14 +47,14 @@ func TestJSONPlaceholderErrors(t *testing.T) {
 	// Test 404 for non-existent post
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts/99999"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(404)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(404)),
 	)
 	require.NoError(t, err)
 
 	// Test 404 for non-existent endpoint
 	err = actor.AttemptsTo(
 		api.GetRequest("/nonexistent"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(404)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(404)),
 	)
 	require.NoError(t, err)
 }
@@ -79,8 +80,8 @@ func TestJSONPlaceholderPostRequest(t *testing.T) {
 			}
 			return api.SendRequest(req).PerformAs(a)
 		}),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
-		assertions.That(api.LastResponseBody{}, assertions.Contains("Test Post")),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
+		ensure.That(api.LastResponseBody{}, expectations.Contains("Test Post")),
 	)
 	require.NoError(t, err)
 }
@@ -91,8 +92,8 @@ func TestJSONPlaceholderHeaders(t *testing.T) {
 
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
-		assertions.That(api.NewResponseHeader("content-type"), assertions.Contains("json")),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+		ensure.That(api.NewResponseHeader("content-type"), expectations.Contains("json")),
 	)
 	require.NoError(t, err)
 }
@@ -106,13 +107,13 @@ func TestMultipleActors(t *testing.T) {
 	// Both actors can read posts
 	err := admin.AttemptsTo(
 		api.GetRequest("/posts"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 	require.NoError(t, err)
 
 	err = user.AttemptsTo(
 		api.GetRequest("/posts"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 	require.NoError(t, err)
 }
@@ -125,7 +126,7 @@ func TestTaskComposition(t *testing.T) {
 	checkApiAvailable := core.Where(
 		"checks if API is available",
 		api.GetRequest("/posts"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 
 	// Use the task

@@ -6,8 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nchursin/serenity-go/serenity/api"
-	"github.com/nchursin/serenity-go/serenity/assertions"
 	"github.com/nchursin/serenity-go/serenity/core"
+	"github.com/nchursin/serenity-go/serenity/ensure"
+	"github.com/nchursin/serenity-go/serenity/expectations"
 )
 
 // TestJSONPlaceholderPosts demonstrates basic CRUD operations with JSONPlaceholder
@@ -34,7 +35,7 @@ func TestJSONPlaceholderPosts(t *testing.T) {
 			sendReq := api.SendRequest(req)
 			return sendReq.PerformAs(a)
 		}),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
 	)
 
 	require.NoError(t, err)
@@ -46,7 +47,7 @@ func TestJSONPlaceholderGetPosts(t *testing.T) {
 
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 
 	require.NoError(t, err)
@@ -59,7 +60,7 @@ func TestJSONPlaceholderErrorHandling(t *testing.T) {
 	// Test 404 - non-existent resource
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts/99999"),
-		assertions.That(api.LastResponseStatus{}, assertions.Equals(404)),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(404)),
 	)
 
 	require.NoError(t, err)
