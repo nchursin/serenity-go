@@ -1,0 +1,123 @@
+package api
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"time"
+
+	"github.com/nchursin/serenity-go/serenity/core"
+)
+
+// CallAnAPI enables an actor to make HTTP requests to APIs
+type CallAnAPI interface {
+	core.Ability
+	// SendRequest sends an HTTP request and stores the response
+	SendRequest(req *http.Request) (*http.Response, error)
+	// LastResponse returns the most recent response
+	LastResponse() *http.Response
+	// SetBaseURL sets the base URL for subsequent requests
+	SetBaseURL(baseURL string) error
+	// GetBaseURL returns the current base URL
+	GetBaseURL() string
+}
+
+// callAnAPI implements the CallAnAPI interface
+type callAnAPI struct {
+	client       *http.Client
+	baseURL      string
+	lastResponse *http.Response
+}
+
+// Using creates a new CallAnAPI ability with the given HTTP client
+func Using(client *http.Client) CallAnAPI {
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	return &callAnAPI{
+		client:  client,
+		baseURL: "",
+	}
+}
+
+// UsingURL creates a new CallAnAPI ability with the given base URL
+func UsingURL(baseURL string) CallAnAPI {
+	return Using(http.DefaultClient).(*callAnAPI).withBaseURL(baseURL)
+}
+
+// SendRequest sends an HTTP request and stores the response
+func (c *callAnAPI) SendRequest(req *http.Request) (*http.Response, error) {
+	// Apply base URL if request URL is relative
+	if c.baseURL != "" && req.URL != nil && !req.URL.IsAbs() {
+		baseURL, err := url.Parse(c.baseURL)
+		if err != nil {
+			return nil, fmt.Errorf("invalid base URL: %w", err)
+		}
+
+		req.URL = baseURL.ResolveReference(req.URL)
+	}
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+
+	// Store the response for later retrieval
+	c.lastResponse = resp
+
+	return resp, nil
+}
+
+// LastResponse returns the most recent response
+func (c *callAnAPI) LastResponse() *http.Response {
+	return c.lastResponse
+}
+
+// SetBaseURL sets the base URL for subsequent requests
+func (c *callAnAPI) SetBaseURL(baseURL string) error {
+	_, err := url.Parse(baseURL)
+	if err != nil {
+		return fmt.Errorf("invalid base URL: %w", err)
+	}
+
+	c.baseURL = baseURL
+	return nil
+}
+
+// GetBaseURL returns the current base URL
+func (c *callAnAPI) GetBaseURL() string {
+	return c.baseURL
+}
+
+// withBaseURL sets the base URL and returns the ability for chaining
+func (c *callAnAPI) withBaseURL(baseURL string) CallAnAPI {
+	c.baseURL = baseURL
+	return c
+}
+
+// Helper method to read response body safely
+func (c *callAnAPI) readResponseBody() ([]byte, error) {
+	if c.lastResponse == nil {
+		return nil, fmt.Errorf("no response available")
+	}
+
+	defer c.lastResponse.Body.Close()
+	body, err := io.ReadAll(c.lastResponse.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Restore body for potential re-reading
+	c.lastResponse.Body = io.NopCloser(io.NopCloser(nil))
+	c.lastResponse.Body = io.NopCloser(io.NopCloser(nil))
+
+	return body, nil
+}
+
+// Helper method to get response time (can be tracked in interactions)
+func (c *callAnAPI) getResponseTime() time.Duration {
+	// This would need to be implemented with timing in interactions
+	return 0
+}
