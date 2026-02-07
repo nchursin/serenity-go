@@ -50,8 +50,8 @@ func TestAPI(t *testing.T) {
     // Test the API
     err := actor.AttemptsTo(
         api.PostRequest("/posts").With(newPost),
-        assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(201)),
-        assertions.That(api.LastResponseBody{}).Is(assertions.Contains("Test Post")),
+        assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
+        assertions.That(api.LastResponseBody{}, assertions.Contains("Test Post")),
     )
 
     require.NoError(t, err)
@@ -106,7 +106,7 @@ api.DeleteRequest("/posts/123")
 createUserTask := core.Where(
     "creates a new user",
     api.PostRequest("/users").With(userData),
-    assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(201)),
+    assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
 )
 
 // Use the task
@@ -119,9 +119,9 @@ Questions retrieve information from the system:
 
 ```go
 // Built-in questions
-assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200))
-assertions.That(api.LastResponseBody{}).Is(assertions.Contains("success"))
-assertions.That(api.NewResponseHeader("content-type")).Is(assertions.Contains("json"))
+assertions.That(api.LastResponseStatus{}, assertions.Equals(200))
+assertions.That(api.LastResponseBody{}, assertions.Contains("success"))
+assertions.That(api.NewResponseHeader("content-type"), assertions.Contains("json"))
 ```
 
 ### Assertions
@@ -129,12 +129,12 @@ assertions.That(api.NewResponseHeader("content-type")).Is(assertions.Contains("j
 Verify that expectations are met:
 
 ```go
-assertions.That(question).Is(assertions.Equals(expected))
-assertions.That(question).Is(assertions.Contains(substring))
-assertions.That(question).Is(assertions.IsEmpty())
-assertions.That(question).Is(assertions.ArrayLengthEquals(5))
-assertions.That(question).Is(assertions.IsGreaterThan(10))
-assertions.That(question).Is(assertions.ContainsKey("id"))
+assertions.That(question, assertions.Equals(expected))
+assertions.That(question, assertions.Contains(substring))
+assertions.That(question, assertions.IsEmpty())
+assertions.That(question, assertions.ArrayLengthEquals(5))
+assertions.That(question, assertions.IsGreaterThan(10))
+assertions.That(question, assertions.ContainsKey("id"))
 ```
 
 ## API Testing
@@ -145,7 +145,7 @@ assertions.That(question).Is(assertions.ContainsKey("id"))
 // GET request
 err := actor.AttemptsTo(
     api.GetRequest("/posts"),
-    assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200)),
+    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
 )
 
 // POST request with JSON data
@@ -157,7 +157,7 @@ newPost := map[string]interface{}{
 
 err = actor.AttemptsTo(
     api.PostRequest("/posts").With(newPost),
-    assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(201)),
+    assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
 )
 
 // PUT request with headers
@@ -172,13 +172,13 @@ err = actor.AttemptsTo(
         }
         return api.SendRequest(req).PerformAs(a)
     }),
-    assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200)),
+    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
 )
 
 // DELETE request
 err = actor.AttemptsTo(
     api.DeleteRequest("/posts/1"),
-    assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200)),
+    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
 )
 ```
 
@@ -204,9 +204,9 @@ err = actor.AttemptsTo(api.SendRequest(req))
 ```go
 err := actor.AttemptsTo(
     api.GetRequest("/posts/1"),
-    assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200)),
-    assertions.That(api.LastResponseBody{}).Is(assertions.Contains("title")),
-    assertions.That(api.NewResponseHeader("content-type")).Is(assertions.Contains("json")),
+    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+    assertions.That(api.LastResponseBody{}, assertions.Contains("title")),
+    assertions.That(api.NewResponseHeader("content-type"), assertions.Contains("json")),
 )
 ```
 
@@ -261,7 +261,7 @@ customQuestion := core.Of[int]("asks for custom value", func(actor core.Actor) (
     return 42, nil
 })
 
-assertions.That(customQuestion).Is(assertions.Equals(42))
+assertions.That(customQuestion, assertions.Equals(42))
 ```
 
 ### Task Composition
@@ -301,7 +301,7 @@ This Go implementation follows the same design principles as Serenity/JS:
 | `actorCalled('John')` | `core.NewActor("John")` |
 | `WhoCan(CallAnAPI.using(...))` | `WhoCan(api.UsingURL(...))` |
 | `attemptsTo(Send.a(...))` | `AttemptsTo(api.PostRequest(...))` |
-| `Ensure.that(LastResponse.status(), equals(200))` | `assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200))` |
+| `Ensure.that(LastResponse.status(), equals(200))` | `assertions.That(api.LastResponseStatus{}, assertions.Equals(200))` |
 
 ## Development Status
 

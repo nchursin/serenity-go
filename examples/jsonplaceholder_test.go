@@ -34,7 +34,7 @@ func TestJSONPlaceholderPosts(t *testing.T) {
 			sendReq := api.SendRequest(req)
 			return sendReq.PerformAs(a)
 		}),
-		assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(201)),
+		assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
 	)
 
 	require.NoError(t, err)
@@ -46,7 +46,7 @@ func TestJSONPlaceholderGetPosts(t *testing.T) {
 
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts"),
-		assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200)),
+		assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
 	)
 
 	require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestJSONPlaceholderErrorHandling(t *testing.T) {
 	// Test 404 - non-existent resource
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts/99999"),
-		assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(404)),
+		assertions.That(api.LastResponseStatus{}, assertions.Equals(404)),
 	)
 
 	require.NoError(t, err)

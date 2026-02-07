@@ -199,8 +199,8 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 
     err := actor.AttemptsTo(
         api.GetRequest("/posts"),
-        assertions.That(api.LastResponseStatus{}).Is(assertions.Equals(200)),
-        assertions.That(api.LastResponseBody{}).Is(assertions.Contains("title")),
+        assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+        assertions.That(api.LastResponseBody{}, assertions.Contains("title")),
     )
     require.NoError(t, err)
 }

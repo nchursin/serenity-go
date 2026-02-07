@@ -23,22 +23,22 @@ type EnsureActivity[T any] struct {
 	expectation Expectation[T]
 }
 
-// That creates a new Ensure assertion
-func That[T any](question core.Question[T]) *EnsureBuilder[T] {
-	return &EnsureBuilder[T]{question: question}
-}
-
-// EnsureBuilder helps build assertions with fluent interface
+// EnsureBuilder helps build assertions with fluent interface (deprecated, kept for compatibility)
 type EnsureBuilder[T any] struct {
 	question core.Question[T]
 }
 
-// Is sets the expectation for the assertion
-func (eb *EnsureBuilder[T]) Is(expectation Expectation[T]) core.Activity {
+// That creates a new Ensure assertion with the new API
+func That[T any](question core.Question[T], expectation Expectation[T]) core.Activity {
 	return &EnsureActivity[T]{
-		question:    eb.question,
+		question:    question,
 		expectation: expectation,
 	}
+}
+
+// Is sets the expectation for the assertion (deprecated, use That(question, expectation) instead)
+func (eb *EnsureBuilder[T]) Is(expectation Expectation[T]) core.Activity {
+	return That(eb.question, expectation)
 }
 
 // Description returns the activity description
@@ -336,15 +336,15 @@ type ensureBuilder struct{}
 
 // StringThat creates a new Ensure assertion for string questions
 func (eb ensureBuilder) StringThat(question core.Question[string]) *EnsureBuilder[string] {
-	return That(question)
+	return &EnsureBuilder[string]{question: question}
 }
 
 // IntThat creates a new Ensure assertion for int questions
 func (eb ensureBuilder) IntThat(question core.Question[int]) *EnsureBuilder[int] {
-	return That(question)
+	return &EnsureBuilder[int]{question: question}
 }
 
 // AnyThat creates a new Ensure assertion for any type questions
 func (eb ensureBuilder) AnyThat(question core.Question[interface{}]) *EnsureBuilder[interface{}] {
-	return That(question)
+	return &EnsureBuilder[interface{}]{question: question}
 }
