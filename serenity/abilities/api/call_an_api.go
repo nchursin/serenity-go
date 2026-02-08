@@ -7,12 +7,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/nchursin/serenity-go/serenity/core"
+	"github.com/nchursin/serenity-go/serenity/abilities"
 )
 
 // CallAnAPI enables an actor to make HTTP requests to APIs
 type CallAnAPI interface {
-	core.Ability
+	abilities.Ability
 	// SendRequest sends an HTTP request and stores the response
 	SendRequest(req *http.Request) (*http.Response, error)
 	// LastResponse returns the most recent response
@@ -42,8 +42,8 @@ func Using(client *http.Client) CallAnAPI {
 	}
 }
 
-// UsingURL creates a new CallAnAPI ability with the given base URL
-func UsingURL(baseURL string) CallAnAPI {
+// CallAnApiAt creates a new CallAnAPI ability with the given base URL
+func CallAnApiAt(baseURL string) CallAnAPI {
 	return Using(http.DefaultClient).(*callAnAPI).withBaseURL(baseURL)
 }
 

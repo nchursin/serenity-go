@@ -3,12 +3,14 @@ package core
 import (
 	"fmt"
 	"sync"
+
+	"github.com/nchursin/serenity-go/serenity/abilities"
 )
 
 // actor implements the Actor interface
 type actor struct {
 	name      string
-	abilities []Ability
+	abilities []abilities.Ability
 	mutex     sync.RWMutex
 }
 
@@ -16,7 +18,7 @@ type actor struct {
 func NewActor(name string) Actor {
 	return &actor{
 		name:      name,
-		abilities: make([]Ability, 0),
+		abilities: make([]abilities.Ability, 0),
 	}
 }
 
@@ -26,7 +28,7 @@ func (a *actor) Name() string {
 }
 
 // WhoCan adds abilities to the actor
-func (a *actor) WhoCan(abilities ...Ability) Actor {
+func (a *actor) WhoCan(abilities ...abilities.Ability) Actor {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
@@ -35,7 +37,7 @@ func (a *actor) WhoCan(abilities ...Ability) Actor {
 }
 
 // AbilityTo retrieves a specific ability from the actor
-func (a *actor) AbilityTo(targetAbility Ability) (Ability, error) {
+func (a *actor) AbilityTo(targetAbility abilities.Ability) (abilities.Ability, error) {
 	a.mutex.RLock()
 	defer a.mutex.RUnlock()
 
@@ -65,7 +67,7 @@ func (a *actor) AnswersTo(question Question[any]) (any, error) {
 }
 
 // abilityTypeOf returns the type of an ability for comparison
-func abilityTypeOf(ability Ability) string {
+func abilityTypeOf(ability abilities.Ability) string {
 	return fmt.Sprintf("%T", ability)
 }
 

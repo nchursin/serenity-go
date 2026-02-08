@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/nchursin/serenity-go/serenity/api"
+	"github.com/nchursin/serenity-go/serenity/abilities/api"
 	"github.com/nchursin/serenity-go/serenity/core"
 	"github.com/nchursin/serenity-go/serenity/expectations"
 	"github.com/nchursin/serenity-go/serenity/expectations/ensure"
@@ -13,7 +13,7 @@ import (
 
 // TestJSONPlaceholderBasics demonstrates basic API testing with JSONPlaceholder
 func TestJSONPlaceholderBasics(t *testing.T) {
-	actor := core.NewActor("APITester").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	// Test GET posts - should return existing posts
 	err := actor.AttemptsTo(
@@ -42,7 +42,7 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 
 // TestJSONPlaceholderErrors demonstrates error scenarios
 func TestJSONPlaceholderErrors(t *testing.T) {
-	actor := core.NewActor("ErrorTester").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("ErrorTester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	// Test 404 for non-existent post
 	err := actor.AttemptsTo(
@@ -61,7 +61,7 @@ func TestJSONPlaceholderErrors(t *testing.T) {
 
 // TestJSONPlaceholderPostRequest demonstrates POST request functionality
 func TestJSONPlaceholderPostRequest(t *testing.T) {
-	actor := core.NewActor("PostTester").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("PostTester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	// Create a new post (JSONPlaceholder will return the data with an ID)
 	newPost := map[string]interface{}{
@@ -88,7 +88,7 @@ func TestJSONPlaceholderPostRequest(t *testing.T) {
 
 // TestJSONPlaceholderHeaders demonstrates header assertions
 func TestJSONPlaceholderHeaders(t *testing.T) {
-	actor := core.NewActor("HeaderTester").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("HeaderTester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts"),
@@ -101,8 +101,8 @@ func TestJSONPlaceholderHeaders(t *testing.T) {
 // TestMultipleActors demonstrates using multiple actors
 func TestMultipleActors(t *testing.T) {
 	// Different actors for different roles
-	admin := core.NewActor("Admin").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
-	user := core.NewActor("RegularUser").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	admin := core.NewActor("Admin").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
+	user := core.NewActor("RegularUser").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	// Both actors can read posts
 	err := admin.AttemptsTo(
@@ -120,7 +120,7 @@ func TestMultipleActors(t *testing.T) {
 
 // TestTaskComposition demonstrates creating reusable tasks
 func TestTaskComposition(t *testing.T) {
-	actor := core.NewActor("TaskUser").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("TaskUser").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	// Define a reusable task for checking API availability
 	checkApiAvailable := core.Where(

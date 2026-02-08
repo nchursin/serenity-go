@@ -2,6 +2,8 @@ package core
 
 import (
 	"time"
+
+	"github.com/nchursin/serenity-go/serenity/abilities"
 )
 
 // Actor represents a person or external system interacting with the system under test.
@@ -11,21 +13,16 @@ type Actor interface {
 	Name() string
 
 	// WhoCan gives the actor additional abilities to interact with the system
-	WhoCan(abilities ...Ability) Actor
+	WhoCan(abilities ...abilities.Ability) Actor
 
 	// AbilityTo retrieves a specific ability from the actor
-	AbilityTo(ability Ability) (Ability, error)
+	AbilityTo(ability abilities.Ability) (abilities.Ability, error)
 
 	// AttemptsTo performs one or more activities
 	AttemptsTo(activities ...Activity) error
 
 	// AnswersTo answers a question about the system state
 	AnswersTo(question Question[any]) (any, error)
-}
-
-// Ability enables an actor to interact with a specific interface of the system
-type Ability interface {
-	// Base interface for all abilities
 }
 
 // Activity represents an action that an actor can perform

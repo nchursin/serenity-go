@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/nchursin/serenity-go/serenity/api"
+	"github.com/nchursin/serenity-go/serenity/abilities/api"
 	"github.com/nchursin/serenity-go/serenity/core"
 	"github.com/nchursin/serenity-go/serenity/expectations"
 	"github.com/nchursin/serenity-go/serenity/expectations/ensure"
@@ -14,7 +14,7 @@ import (
 // TestJSONPlaceholderPosts demonstrates basic CRUD operations with JSONPlaceholder
 func TestJSONPlaceholderPosts(t *testing.T) {
 	// Create an actor with API ability
-	actor := core.NewActor("APITester").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	// CREATE: Create a new post
 	newPost := map[string]interface{}{
@@ -43,7 +43,7 @@ func TestJSONPlaceholderPosts(t *testing.T) {
 
 // TestJSONPlaceholderGetPosts demonstrates getting a list of posts
 func TestJSONPlaceholderGetPosts(t *testing.T) {
-	actor := core.NewActor("Reader").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("Reader").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	err := actor.AttemptsTo(
 		api.GetRequest("/posts"),
@@ -55,7 +55,7 @@ func TestJSONPlaceholderGetPosts(t *testing.T) {
 
 // TestJSONPlaceholderErrorHandling demonstrates error scenarios
 func TestJSONPlaceholderErrorHandling(t *testing.T) {
-	actor := core.NewActor("ErrorTester").WhoCan(api.UsingURL("https://jsonplaceholder.typicode.com"))
+	actor := core.NewActor("ErrorTester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	// Test 404 - non-existent resource
 	err := actor.AttemptsTo(
