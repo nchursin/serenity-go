@@ -1,5 +1,7 @@
 # Serenity-Go: Screenplay Pattern Testing Framework for Go
 
+![CI](https://github.com/nchursin/serenity-go/workflows/CI/badge.svg)
+
 A Go implementation of the Serenity/JS Screenplay Pattern for acceptance testing, focused on API testing capabilities.
 
 ## Overview
