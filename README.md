@@ -304,16 +304,6 @@ This Go implementation follows the same design principles as Serenity/JS:
 | `attemptsTo(Send.a(...))` | `AttemptsTo(api.SendGetRequest(...))` |
 | `Ensure.that(LastResponse.status(), equals(200))` | `ensure.That(api.LastResponseStatus{}, expectations.Equals(200))` |
 
-## Development Status
-
-This is an MVP implementation focused on API testing. Future enhancements may include:
-
-- [ ] Database testing abilities
-- [ ] gRPC testing support
-- [ ] Advanced reporting capabilities
-- [ ] Integration with popular Go test frameworks
-- [ ] Web UI testing capabilities
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.

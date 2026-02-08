@@ -50,7 +50,9 @@ func (lr LastResponseBody) AnsweredBy(actor core.Actor) (string, error) {
 		return "", fmt.Errorf("no response available")
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close() // Ignore cleanup error
+	}()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
@@ -121,7 +123,9 @@ func (rbaj ResponseBodyAsJSON[T]) AnsweredBy(actor core.Actor) (T, error) {
 		return result, fmt.Errorf("no response available")
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close() // Ignore cleanup error
+	}()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return result, fmt.Errorf("failed to read response body: %w", err)
@@ -165,7 +169,9 @@ func (jp JSONPath) AnsweredBy(actor core.Actor) (any, error) {
 		return nil, fmt.Errorf("no response available")
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close() // Ignore cleanup error
+	}()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)

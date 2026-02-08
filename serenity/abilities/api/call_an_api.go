@@ -2,10 +2,8 @@ package api
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/nchursin/serenity-go/serenity/abilities"
 )
@@ -95,29 +93,4 @@ func (c *callAnAPI) GetBaseURL() string {
 func (c *callAnAPI) withBaseURL(baseURL string) CallAnAPI {
 	c.baseURL = baseURL
 	return c
-}
-
-// Helper method to read response body safely
-func (c *callAnAPI) readResponseBody() ([]byte, error) {
-	if c.lastResponse == nil {
-		return nil, fmt.Errorf("no response available")
-	}
-
-	defer c.lastResponse.Body.Close()
-	body, err := io.ReadAll(c.lastResponse.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	// Restore body for potential re-reading
-	c.lastResponse.Body = io.NopCloser(io.NopCloser(nil))
-	c.lastResponse.Body = io.NopCloser(io.NopCloser(nil))
-
-	return body, nil
-}
-
-// Helper method to get response time (can be tracked in interactions)
-func (c *callAnAPI) getResponseTime() time.Duration {
-	// This would need to be implemented with timing in interactions
-	return 0
 }

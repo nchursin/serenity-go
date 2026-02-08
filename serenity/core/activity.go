@@ -20,7 +20,7 @@ func NewTask(description string, activities ...Activity) Task {
 
 // Description returns the task description
 func (t *task) Description() string {
-	return fmt.Sprintf("%s", t.description)
+	return t.description
 }
 
 // PerformAs executes the task as the given actor

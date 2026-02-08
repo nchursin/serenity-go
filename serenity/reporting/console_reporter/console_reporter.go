@@ -104,6 +104,6 @@ func (cr *ConsoleReporter) getIndent() string {
 // writeLine writes a formatted line to the output
 func (cr *ConsoleReporter) writeLine(format string, args ...interface{}) {
 	if cr.output != nil {
-		fmt.Fprintf(cr.output, format+"\n", args...)
+		_, _ = fmt.Fprintf(cr.output, format+"\n", args...)
 	}
 }
