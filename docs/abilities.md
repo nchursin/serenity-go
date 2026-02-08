@@ -52,12 +52,12 @@ import "github.com/nchursin/serenity-go/serenity/abilities"
 // FileManagerAbility - способность для работы с файлами
 type FileManagerAbility interface {
     abilities.Ability
-    
+
     // Core operations
     ReadFile(path string) (string, error)
     WriteFile(path string, content string) error
     DeleteFile(path string) error
-    
+
     // State management
     LastOperation() string
     SetWorkingDirectory(dir string) error
@@ -89,7 +89,7 @@ func (f *fileManagerAbility) ReadFile(path string) (string, error) {
         f.lastOperation = fmt.Sprintf("read error: %s", path)
         return "", fmt.Errorf("failed to read file %s: %w", path, err)
     }
-    
+
     f.lastOperation = fmt.Sprintf("read: %s", path)
     return string(content), nil
 }
@@ -101,7 +101,7 @@ func (f *fileManagerAbility) WriteFile(path string, content string) error {
         f.lastOperation = fmt.Sprintf("write error: %s", path)
         return fmt.Errorf("failed to write file %s: %w", path, err)
     }
-    
+
     f.lastOperation = fmt.Sprintf("write: %s", path)
     return nil
 }
@@ -113,7 +113,7 @@ func (f *fileManagerAbility) DeleteFile(path string) error {
         f.lastOperation = fmt.Sprintf("delete error: %s", path)
         return fmt.Errorf("failed to delete file %s: %w", path, err)
     }
-    
+
     f.lastOperation = fmt.Sprintf("delete: %s", path)
     return nil
 }
@@ -130,11 +130,11 @@ func (f *fileManagerAbility) SetWorkingDirectory(dir string) error {
         }
         dir = abs
     }
-    
+
     if _, err := os.Stat(dir); os.IsNotExist(err) {
         return fmt.Errorf("directory does not exist: %s", dir)
     }
-    
+
     f.workingDir = dir
     return nil
 }
@@ -195,7 +195,7 @@ func (r *ReadFileActivity) PerformAs(actor core.Actor) error {
     if err != nil {
         return fmt.Errorf("actor does not have file management ability: %w", err)
     }
-    
+
     fileManager := ability.(FileManagerAbility)
     _, err = fileManager.ReadFile(r.path)
     return err
@@ -223,7 +223,7 @@ func (f *FileContentQuestion) AnsweredBy(actor core.Actor) (string, error) {
     if err != nil {
         return "", fmt.Errorf("actor does not have file management ability: %w", err)
     }
-    
+
     fileManager := ability.(FileManagerAbility)
     return fileManager.ReadFile(f.path)
 }
@@ -243,13 +243,13 @@ func TestFileOperations(t *testing.T) {
     actor := core.NewActor("FileUser").WhoCan(
         custom.ManageFilesIn("/tmp/test"),
     )
-    
+
     // Используем Activities
     err := actor.AttemptsTo(
         custom.WriteFile("test.txt", "Hello, World!"),
         ensure.That(custom.FileContent("test.txt"), expectations.Contains("Hello")),
     )
-    
+
     require.NoError(t, err)
 }
 ```
@@ -262,7 +262,7 @@ func TestAPIAndFileOperations(t *testing.T) {
         api.CallAnApiAt("https://api.example.com"),
         custom.ManageFilesIn("./test-data"),
     )
-    
+
     err := actor.AttemptsTo(
         // Сначала получаем данные из API
         api.SendGetRequest("/users/1"),
@@ -271,7 +271,7 @@ func TestAPIAndFileOperations(t *testing.T) {
         // Проверяем содержимое файла
         ensure.That(custom.FileContent("user.json"), expectations.Contains("name")),
     )
-    
+
     require.NoError(t, err)
 }
 ```
@@ -343,14 +343,14 @@ type databaseConnectionAbility struct {
 func (d *databaseConnectionAbility) Execute(query string, args ...interface{}) (*sql.Rows, error) {
     d.mutex.Lock()
     defer d.mutex.Unlock()
-    
+
     d.lastQuery = query
-    
+
     if !d.isConnected {
         d.lastError = fmt.Errorf("not connected to database")
         return nil, d.lastError
     }
-    
+
     rows, err := d.db.Query(query, args...)
     d.lastError = err
     return rows, err
@@ -375,24 +375,24 @@ type resilientAPIAbility struct {
 
 func (r *resilientAPIAbility) SendRequest(req *http.Request) (*http.Response, error) {
     var lastErr error
-    
+
     for attempt := 0; attempt <= r.retryPolicy.MaxRetries; attempt++ {
         if attempt > 0 {
             time.Sleep(r.retryPolicy.Delay(attempt))
         }
-        
+
         resp, err := r.client.Do(req)
         if err == nil {
             return resp, nil
         }
-        
+
         lastErr = err
-        
+
         if !r.retryPolicy.ShouldRetry(err, attempt) {
             break
         }
     }
-    
+
     return nil, fmt.Errorf("request failed after %d attempts: %w", r.retryPolicy.MaxRetries+1, lastErr)
 }
 ```
@@ -407,13 +407,13 @@ func TestFileManagerAbility_ReadFile(t *testing.T) {
     tempDir := t.TempDir()
     ability := custom.ManageFilesIn(tempDir)
     testFile := filepath.Join(tempDir, "test.txt")
-    
+
     // Создаем тестовый файл
     require.NoError(t, os.WriteFile(testFile, []byte("test content"), 0644))
-    
+
     // Act
     content, err := ability.ReadFile("test.txt")
-    
+
     // Assert
     require.NoError(t, err)
     assert.Equal(t, "test content", content)
@@ -423,10 +423,10 @@ func TestFileManagerAbility_ReadFile(t *testing.T) {
 func TestFileManagerAbility_ReadFile_NotFound(t *testing.T) {
     // Arrange
     ability := custom.ManageFilesIn(t.TempDir())
-    
+
     // Act
     _, err := ability.ReadFile("nonexistent.txt")
-    
+
     // Assert
     require.Error(t, err)
     assert.Contains(t, err.Error(), "failed to read file")
@@ -441,12 +441,12 @@ func TestFileManagerIntegration(t *testing.T) {
     actor := core.NewActor("FileTester").WhoCan(
         custom.ManageFilesIn(t.TempDir()),
     )
-    
+
     err := actor.AttemptsTo(
         custom.WriteFile("integration.txt", "integration test"),
         ensure.That(custom.FileContent("integration.txt"), expectations.Equals("integration test")),
     )
-    
+
     require.NoError(t, err)
 }
 ```
@@ -517,6 +517,7 @@ type WebSocketAbility interface {
 1. **Изучите примеры** в [docs/examples/](examples/)
 2. **Используйте шаблоны** из [docs/templates/](templates/)
 3. **Посмотрите существующие Abilities** в исходном коде проекта
-4. **Создайте свою первую Ability** и поделитесь ею с сообществом!
+4. **Изучите готовый пример** FileSystemAbility с тестами в [examples/ability/](../examples/ability/)
 
 Удачи в создании мощных и гибких тестов с помощью Serenity-Go! 🎉
+
