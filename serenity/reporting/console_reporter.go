@@ -10,6 +10,8 @@ import (
 	"github.com/nchursin/serenity-go/serenity/core"
 )
 
+// TODO: вныести ConsoleReporter в подпакет `console_reporter`
+
 // Reporter handles test execution reporting
 type Reporter interface {
 	// OnTestStart is called when a test begins

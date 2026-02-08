@@ -29,15 +29,16 @@ import (
     "testing"
     "github.com/stretchr/testify/require"
 
-    "github.com/nchursin/serenity-go/serenity/api"
-    "github.com/nchursin/serenity-go/serenity/assertions"
+    "github.com/nchursin/serenity-go/serenity/abilities/api"
     "github.com/nchursin/serenity-go/serenity/core"
+    "github.com/nchursin/serenity-go/serenity/expectations"
+    "github.com/nchursin/serenity-go/serenity/expectations/ensure"
 )
 
 func TestAPI(t *testing.T) {
     // Create an actor with API ability
     actor := core.NewActor("APITester").WhoCan(
-        api.UsingURL("https://jsonplaceholder.typicode.com"),
+        api.CallAnApiAt("https://jsonplaceholder.typicode.com"),
     )
 
     // Define test data
@@ -49,9 +50,17 @@ func TestAPI(t *testing.T) {
 
     // Test the API
     err := actor.AttemptsTo(
-        api.PostRequest("/posts").With(newPost),
-        assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
-        assertions.That(api.LastResponseBody{}, assertions.Contains("Test Post")),
+        core.NewInteraction("creates a new post", func(a core.Actor) error {
+            req, err := api.Post("/posts").
+                With(newPost).
+                Build()
+            if err != nil {
+                return err
+            }
+            return api.SendRequest(req).PerformAs(a)
+        }),
+        ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
+        ensure.That(api.LastResponseBody{}, expectations.Contains("Test Post")),
     )
 
     require.NoError(t, err)
@@ -69,7 +78,7 @@ Actors represent people or systems interacting with your application:
 actor := core.NewActor("John Doe")
 
 // Give the actor abilities to interact with your system
-actor = actor.WhoCan(api.UsingURL("https://api.example.com"))
+actor = actor.WhoCan(api.CallAnApiAt("https://api.example.com"))
 ```
 
 ### Abilities
@@ -78,7 +87,7 @@ Abilities enable actors to interact with different interfaces:
 
 ```go
 // HTTP API ability
-apiAbility := api.UsingURL("https://api.example.com")
+apiAbility := api.CallAnApiAt("https://api.example.com")
 
 // Actor with multiple abilities
 actor := core.NewActor("TestUser").WhoCan(
@@ -105,8 +114,16 @@ api.DeleteRequest("/posts/123")
 // Define reusable task
 createUserTask := core.Where(
     "creates a new user",
-    api.PostRequest("/users").With(userData),
-    assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
+    core.NewInteraction("creates a new user", func(a core.Actor) error {
+        req, err := api.Post("/users").
+            With(userData).
+            Build()
+        if err != nil {
+            return err
+        }
+        return api.SendRequest(req).PerformAs(a)
+    }),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
 )
 
 // Use the task
@@ -119,9 +136,9 @@ Questions retrieve information from the system:
 
 ```go
 // Built-in questions
-assertions.That(api.LastResponseStatus{}, assertions.Equals(200))
-assertions.That(api.LastResponseBody{}, assertions.Contains("success"))
-assertions.That(api.NewResponseHeader("content-type"), assertions.Contains("json"))
+ensure.That(api.LastResponseStatus{}, expectations.Equals(200))
+ensure.That(api.LastResponseBody{}, expectations.Contains("success"))
+ensure.That(api.NewResponseHeader("content-type"), expectations.Contains("json"))
 ```
 
 ### Assertions
@@ -129,12 +146,12 @@ assertions.That(api.NewResponseHeader("content-type"), assertions.Contains("json
 Verify that expectations are met:
 
 ```go
-assertions.That(question, assertions.Equals(expected))
-assertions.That(question, assertions.Contains(substring))
-assertions.That(question, assertions.IsEmpty())
-assertions.That(question, assertions.ArrayLengthEquals(5))
-assertions.That(question, assertions.IsGreaterThan(10))
-assertions.That(question, assertions.ContainsKey("id"))
+ensure.That(question, expectations.Equals(expected))
+ensure.That(question, expectations.Contains(substring))
+ensure.That(question, expectations.IsEmpty())
+ensure.That(question, expectations.ArrayLengthEquals(5))
+ensure.That(question, expectations.IsGreaterThan(10))
+ensure.That(question, expectations.ContainsKey("id"))
 ```
 
 ## API Testing
@@ -145,7 +162,7 @@ assertions.That(question, assertions.ContainsKey("id"))
 // GET request
 err := actor.AttemptsTo(
     api.GetRequest("/posts"),
-    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 )
 
 // POST request with JSON data
@@ -156,8 +173,16 @@ newPost := map[string]interface{}{
 }
 
 err = actor.AttemptsTo(
-    api.PostRequest("/posts").With(newPost),
-    assertions.That(api.LastResponseStatus{}, assertions.Equals(201)),
+    core.NewInteraction("creates a new post", func(a core.Actor) error {
+        req, err := api.Post("/posts").
+            With(newPost).
+            Build()
+        if err != nil {
+            return err
+        }
+        return api.SendRequest(req).PerformAs(a)
+    }),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
 )
 
 // PUT request with headers
@@ -172,13 +197,13 @@ err = actor.AttemptsTo(
         }
         return api.SendRequest(req).PerformAs(a)
     }),
-    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 )
 
 // DELETE request
 err = actor.AttemptsTo(
     api.DeleteRequest("/posts/1"),
-    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 )
 ```
 
@@ -204,9 +229,9 @@ err = actor.AttemptsTo(api.SendRequest(req))
 ```go
 err := actor.AttemptsTo(
     api.GetRequest("/posts/1"),
-    assertions.That(api.LastResponseStatus{}, assertions.Equals(200)),
-    assertions.That(api.LastResponseBody{}, assertions.Contains("title")),
-    assertions.That(api.NewResponseHeader("content-type"), assertions.Contains("json")),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+    ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
+    ensure.That(api.NewResponseHeader("content-type"), expectations.Contains("json")),
 )
 ```
 
@@ -214,8 +239,8 @@ err := actor.AttemptsTo(
 
 The `examples/` directory contains working examples with real APIs:
 
-- `basic_test.go` - Core functionality demonstrations
-- `jsonplaceholder_test.go` - CRUD operations with JSONPlaceholder API
+- `basic_test.go` - JSONPlaceholder API testing examples including basic operations, error scenarios, and multiple actors
+- `jsonplaceholder_test.go` - Additional JSONPlaceholder API examples with CRUD operations
 
 Run examples:
 
@@ -228,8 +253,9 @@ go test ./examples -v
 ### Core Components
 
 - **serenity/core/** - Screenplay Pattern interfaces (Actor, Activity, Question, Task)
-- **serenity/api/** - HTTP API testing capabilities
-- **serenity/assertions/** - Assertion system and expectations
+- **serenity/abilities/api/** - HTTP API testing capabilities
+- **serenity/expectations/** - Assertion system and expectations
+- **serenity/expectations/ensure/** - Ensure-style assertions
 - **serenity/reporting/** - Test reporting and output
 
 ### Design Principles
@@ -261,7 +287,7 @@ customQuestion := core.Of[int]("asks for custom value", func(actor core.Actor) (
     return 42, nil
 })
 
-assertions.That(customQuestion, assertions.Equals(42))
+ensure.That(customQuestion, expectations.Equals(42))
 ```
 
 ### Task Composition
@@ -299,9 +325,9 @@ This Go implementation follows the same design principles as Serenity/JS:
 | Serenity/JS | Serenity-Go |
 |--------------|-------------|
 | `actorCalled('John')` | `core.NewActor("John")` |
-| `WhoCan(CallAnAPI.using(...))` | `WhoCan(api.UsingURL(...))` |
-| `attemptsTo(Send.a(...))` | `AttemptsTo(api.PostRequest(...))` |
-| `Ensure.that(LastResponse.status(), equals(200))` | `assertions.That(api.LastResponseStatus{}, assertions.Equals(200))` |
+| `WhoCan(CallAnAPI.using(...))` | `WhoCan(api.CallAnApiAt(...))` |
+| `attemptsTo(Send.a(...))` | `AttemptsTo(api.GetRequest(...))` |
+| `Ensure.that(LastResponse.status(), equals(200))` | `ensure.That(api.LastResponseStatus{}, expectations.Equals(200))` |
 
 ## Development Status
 

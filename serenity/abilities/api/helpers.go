@@ -22,6 +22,7 @@ func GetRequest(url string) core.Activity {
 	return SendRequest(req)
 }
 
+// TODO: научится констурировать PostRequest с апишкой типа SendPostRequest(url).WithBody(jsonMarshable)
 func PostRequest(url string) core.Activity {
 	req, err := NewRequestBuilder("POST", url).Build()
 	if err != nil {
@@ -32,6 +33,7 @@ func PostRequest(url string) core.Activity {
 	return SendRequest(req)
 }
 
+// TODO: научится констурировать PutRequest с апишкой типа SendPutRequest(url).WithBody(jsonMarshable)
 func PutRequest(url string) core.Activity {
 	req, err := NewRequestBuilder("PUT", url).Build()
 	if err != nil {
