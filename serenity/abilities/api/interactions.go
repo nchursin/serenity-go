@@ -67,6 +67,16 @@ func NewRequestBuilder(method, url string) *RequestBuilder {
 	}
 }
 
+// Method returns the HTTP method
+func (rb *RequestBuilder) Method() string {
+	return rb.method
+}
+
+// URL returns the request URL
+func (rb *RequestBuilder) URL() string {
+	return rb.url
+}
+
 // WithHeader adds a header to the request
 func (rb *RequestBuilder) WithHeader(key, value string) *RequestBuilder {
 	rb.headers[key] = value
@@ -149,29 +159,55 @@ func (rb *RequestBuilder) Build() (*http.Request, error) {
 	return req, nil
 }
 
-// Convenience functions for different HTTP methods
-
-// Get creates a GET request builder
-func Get(url string) *RequestBuilder {
-	return NewRequestBuilder(http.MethodGet, url)
+// RequestActivity - unified HTTP request activity with fluent interface
+type RequestActivity struct {
+	builder *RequestBuilder
 }
 
-// Post creates a POST request builder
-func Post(url string) *RequestBuilder {
-	return NewRequestBuilder(http.MethodPost, url)
+// Description implements core.Activity interface
+func (ra *RequestActivity) Description() string {
+	if ra.builder == nil {
+		return "#actor sends an HTTP request"
+	}
+	return fmt.Sprintf("#actor sends %s request to %s", ra.builder.Method(), ra.builder.URL())
 }
 
-// Put creates a PUT request builder
-func Put(url string) *RequestBuilder {
-	return NewRequestBuilder(http.MethodPut, url)
+// PerformAs implements core.Activity interface
+func (ra *RequestActivity) PerformAs(actor core.Actor) error {
+	if ra.builder == nil {
+		return fmt.Errorf("request builder is nil")
+	}
+
+	req, err := ra.builder.Build()
+	if err != nil {
+		return fmt.Errorf("failed to build request: %w", err)
+	}
+
+	// Reuse existing sendRequest logic
+	sendReq := &sendRequest{request: req}
+	return sendReq.PerformAs(actor)
 }
 
-// Delete creates a DELETE request builder
-func Delete(url string) *RequestBuilder {
-	return NewRequestBuilder(http.MethodDelete, url)
+// WithBody adds request body (JSON marshaling for interface{})
+func (ra *RequestActivity) WithBody(data interface{}) *RequestActivity {
+	if ra.builder != nil {
+		ra.builder.With(data) // Reuse existing logic
+	}
+	return ra
 }
 
-// Patch creates a PATCH request builder
-func Patch(url string) *RequestBuilder {
-	return NewRequestBuilder(http.MethodPatch, url)
+// WithHeaders adds multiple headers
+func (ra *RequestActivity) WithHeaders(headers map[string]string) *RequestActivity {
+	if ra.builder != nil {
+		ra.builder.WithHeaders(headers)
+	}
+	return ra
+}
+
+// WithHeader adds single header
+func (ra *RequestActivity) WithHeader(key, value string) *RequestActivity {
+	if ra.builder != nil {
+		ra.builder.WithHeader(key, value)
+	}
+	return ra
 }

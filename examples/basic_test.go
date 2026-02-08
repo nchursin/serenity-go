@@ -17,7 +17,7 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 
 	// Test GET posts - should return existing posts
 	err := actor.AttemptsTo(
-		api.GetRequest("/posts"),
+		api.SendGetRequest("/posts"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 		ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
 	)
@@ -25,7 +25,7 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 
 	// Test GET users - should return existing users
 	err = actor.AttemptsTo(
-		api.GetRequest("/users"),
+		api.SendGetRequest("/users"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 		ensure.That(api.LastResponseBody{}, expectations.Contains("email")),
 	)
@@ -33,7 +33,7 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 
 	// Test GET specific post
 	err = actor.AttemptsTo(
-		api.GetRequest("/posts/1"),
+		api.SendGetRequest("/posts/1"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 		ensure.That(api.LastResponseBody{}, expectations.Contains("sunt aut facere")),
 	)
@@ -46,14 +46,14 @@ func TestJSONPlaceholderErrors(t *testing.T) {
 
 	// Test 404 for non-existent post
 	err := actor.AttemptsTo(
-		api.GetRequest("/posts/99999"),
+		api.SendGetRequest("/posts/99999"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(404)),
 	)
 	require.NoError(t, err)
 
 	// Test 404 for non-existent endpoint
 	err = actor.AttemptsTo(
-		api.GetRequest("/nonexistent"),
+		api.SendGetRequest("/nonexistent"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(404)),
 	)
 	require.NoError(t, err)
@@ -71,15 +71,8 @@ func TestJSONPlaceholderPostRequest(t *testing.T) {
 	}
 
 	err := actor.AttemptsTo(
-		core.NewInteraction("creates a new post", func(a core.Actor) error {
-			req, err := api.Post("/posts").
-				With(newPost).
-				Build()
-			if err != nil {
-				return err
-			}
-			return api.SendRequest(req).PerformAs(a)
-		}),
+		api.SendPostRequest("/posts").
+			WithBody(newPost),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
 		ensure.That(api.LastResponseBody{}, expectations.Contains("Test Post")),
 	)
@@ -91,7 +84,7 @@ func TestJSONPlaceholderHeaders(t *testing.T) {
 	actor := core.NewActor("HeaderTester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	err := actor.AttemptsTo(
-		api.GetRequest("/posts"),
+		api.SendGetRequest("/posts"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 		ensure.That(api.NewResponseHeader("content-type"), expectations.Contains("json")),
 	)
@@ -106,13 +99,13 @@ func TestMultipleActors(t *testing.T) {
 
 	// Both actors can read posts
 	err := admin.AttemptsTo(
-		api.GetRequest("/posts"),
+		api.SendGetRequest("/posts"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 	require.NoError(t, err)
 
 	err = user.AttemptsTo(
-		api.GetRequest("/posts"),
+		api.SendGetRequest("/posts"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 	require.NoError(t, err)
@@ -125,13 +118,70 @@ func TestTaskComposition(t *testing.T) {
 	// Define a reusable task for checking API availability
 	checkApiAvailable := core.Where(
 		"checks if API is available",
-		api.GetRequest("/posts"),
+		api.SendGetRequest("/posts"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 
 	// Use the task
 	err := actor.AttemptsTo(
 		checkApiAvailable,
+	)
+	require.NoError(t, err)
+}
+
+// TestFluentAPI demonstrates the new unified API with fluent interface
+func TestFluentAPI(t *testing.T) {
+	actor := core.NewActor("FluentTester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
+
+	// Test POST with new API - body and headers
+	newPost := map[string]interface{}{
+		"title":  "Test Post with New API",
+		"body":   "Testing the new fluent API",
+		"userId": 1,
+	}
+
+	err := actor.AttemptsTo(
+		api.SendPostRequest("/posts").
+			WithBody(newPost).
+			WithHeaders(map[string]string{
+				"Content-Type": "application/json",
+				"Accept":       "application/json",
+			}),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
+		ensure.That(api.LastResponseBody{}, expectations.Contains("Test Post with New API")),
+	)
+	require.NoError(t, err)
+
+	// Test GET with headers
+	err = actor.AttemptsTo(
+		api.SendGetRequest("/posts").
+			WithHeader("Accept", "application/json"),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+		ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
+	)
+	require.NoError(t, err)
+
+	// Test PUT with body
+	updatedPost := map[string]interface{}{
+		"id":     1,
+		"title":  "Updated Post",
+		"body":   "Updated content",
+		"userId": 1,
+	}
+
+	err = actor.AttemptsTo(
+		api.SendPutRequest("/posts/1").
+			WithBody(updatedPost).
+			WithHeader("Content-Type", "application/json"),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+	)
+	require.NoError(t, err)
+
+	// Test DELETE with headers
+	err = actor.AttemptsTo(
+		api.SendDeleteRequest("/posts/1").
+			WithHeader("Authorization", "Bearer token"),
+		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 	require.NoError(t, err)
 }

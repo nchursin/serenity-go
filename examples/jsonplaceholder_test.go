@@ -24,17 +24,8 @@ func TestJSONPlaceholderPosts(t *testing.T) {
 	}
 
 	err := actor.AttemptsTo(
-		core.NewInteraction("creates a new post", func(a core.Actor) error {
-			req, err := api.Post("/posts").
-				With(newPost).
-				Build()
-			if err != nil {
-				return err
-			}
-
-			sendReq := api.SendRequest(req)
-			return sendReq.PerformAs(a)
-		}),
+		api.SendPostRequest("/posts").
+			WithBody(newPost),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
 	)
 
@@ -46,7 +37,7 @@ func TestJSONPlaceholderGetPosts(t *testing.T) {
 	actor := core.NewActor("Reader").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
 	err := actor.AttemptsTo(
-		api.GetRequest("/posts"),
+		api.SendGetRequest("/posts"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 	)
 
@@ -59,7 +50,7 @@ func TestJSONPlaceholderErrorHandling(t *testing.T) {
 
 	// Test 404 - non-existent resource
 	err := actor.AttemptsTo(
-		api.GetRequest("/posts/99999"),
+		api.SendGetRequest("/posts/99999"),
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(404)),
 	)
 

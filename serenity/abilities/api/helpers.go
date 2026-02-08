@@ -11,45 +11,30 @@ func SendRequest(req *http.Request) core.Activity {
 	return a(req)
 }
 
-// Convenience functions for HTTP methods that return activities
-func GetRequest(url string) core.Activity {
-	req, err := NewRequestBuilder("GET", url).Build()
-	if err != nil {
-		return core.NewInteraction("get request", func(actor core.Actor) error {
-			return err
-		})
+// SendGetRequest creates GET request activity with fluent interface
+func SendGetRequest(url string) *RequestActivity {
+	return &RequestActivity{
+		builder: NewRequestBuilder("GET", url),
 	}
-	return SendRequest(req)
 }
 
-// TODO: научится констурировать PostRequest с апишкой типа SendPostRequest(url).WithBody(jsonMarshable)
-func PostRequest(url string) core.Activity {
-	req, err := NewRequestBuilder("POST", url).Build()
-	if err != nil {
-		return core.NewInteraction("post request", func(actor core.Actor) error {
-			return err
-		})
+// SendPostRequest creates POST request activity with fluent interface
+func SendPostRequest(url string) *RequestActivity {
+	return &RequestActivity{
+		builder: NewRequestBuilder("POST", url),
 	}
-	return SendRequest(req)
 }
 
-// TODO: научится констурировать PutRequest с апишкой типа SendPutRequest(url).WithBody(jsonMarshable)
-func PutRequest(url string) core.Activity {
-	req, err := NewRequestBuilder("PUT", url).Build()
-	if err != nil {
-		return core.NewInteraction("put request", func(actor core.Actor) error {
-			return err
-		})
+// SendPutRequest creates PUT request activity with fluent interface
+func SendPutRequest(url string) *RequestActivity {
+	return &RequestActivity{
+		builder: NewRequestBuilder("PUT", url),
 	}
-	return SendRequest(req)
 }
 
-func DeleteRequest(url string) core.Activity {
-	req, err := NewRequestBuilder("DELETE", url).Build()
-	if err != nil {
-		return core.NewInteraction("delete request", func(actor core.Actor) error {
-			return err
-		})
+// SendDeleteRequest creates DELETE request activity with fluent interface
+func SendDeleteRequest(url string) *RequestActivity {
+	return &RequestActivity{
+		builder: NewRequestBuilder("DELETE", url),
 	}
-	return SendRequest(req)
 }

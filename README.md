@@ -50,15 +50,8 @@ func TestAPI(t *testing.T) {
 
     // Test the API
     err := actor.AttemptsTo(
-        core.NewInteraction("creates a new post", func(a core.Actor) error {
-            req, err := api.Post("/posts").
-                With(newPost).
-                Build()
-            if err != nil {
-                return err
-            }
-            return api.SendRequest(req).PerformAs(a)
-        }),
+        api.SendPostRequest("/posts").
+            WithBody(newPost),
         ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
         ensure.That(api.LastResponseBody{}, expectations.Contains("Test Post")),
     )
@@ -102,11 +95,11 @@ Activities represent actions that actors perform:
 
 #### Interactions (low-level actions)
 ```go
-// Send HTTP request
-api.GetRequest("/users")
-api.PostRequest("/posts").With(postData)
-api.PutRequest("/users/1").With(updatedUser)
-api.DeleteRequest("/posts/123")
+// Send HTTP requests with fluent interface
+api.SendGetRequest("/users")
+api.SendPostRequest("/posts").WithBody(postData)
+api.SendPutRequest("/users/1").WithBody(updatedUser)
+api.SendDeleteRequest("/posts/123")
 ```
 
 #### Tasks (high-level business actions)
@@ -161,7 +154,7 @@ ensure.That(question, expectations.ContainsKey("id"))
 ```go
 // GET request
 err := actor.AttemptsTo(
-    api.GetRequest("/posts"),
+    api.SendGetRequest("/posts"),
     ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 )
 
@@ -173,36 +166,22 @@ newPost := map[string]interface{}{
 }
 
 err = actor.AttemptsTo(
-    core.NewInteraction("creates a new post", func(a core.Actor) error {
-        req, err := api.Post("/posts").
-            With(newPost).
-            Build()
-        if err != nil {
-            return err
-        }
-        return api.SendRequest(req).PerformAs(a)
-    }),
+    api.SendPostRequest("/posts").
+        WithBody(newPost),
     ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
 )
 
 // PUT request with headers
 err = actor.AttemptsTo(
-    core.NewInteraction("updates a post", func(a core.Actor) error {
-        req, err := api.Put("/posts/1").
-            WithHeader("Authorization", "Bearer token").
-            With(updatedData).
-            Build()
-        if err != nil {
-            return err
-        }
-        return api.SendRequest(req).PerformAs(a)
-    }),
+    api.SendPutRequest("/posts/1").
+        WithHeader("Authorization", "Bearer token").
+        WithBody(updatedData),
     ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 )
 
 // DELETE request
 err = actor.AttemptsTo(
-    api.DeleteRequest("/posts/1"),
+    api.SendDeleteRequest("/posts/1"),
     ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 )
 ```
@@ -211,24 +190,20 @@ err = actor.AttemptsTo(
 
 ```go
 // Fluent request building
-req, err := api.Post("/posts").
-    WithHeader("Content-Type", "application/json").
-    WithHeader("Authorization", "Bearer token").
-    With(postData).
-    Build()
-
-if err != nil {
-    return err
-}
-
-err = actor.AttemptsTo(api.SendRequest(req))
+err = actor.AttemptsTo(
+    api.SendPostRequest("/posts").
+        WithHeader("Content-Type", "application/json").
+        WithHeader("Authorization", "Bearer token").
+        WithBody(postData),
+)
 ```
 
 ### Response Validation
 
 ```go
 err := actor.AttemptsTo(
-    api.GetRequest("/posts/1"),
+    api.SendGetRequest("/posts/1").
+        WithHeader("Accept", "application/json"),
     ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
     ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
     ensure.That(api.NewResponseHeader("content-type"), expectations.Contains("json")),
@@ -326,7 +301,7 @@ This Go implementation follows the same design principles as Serenity/JS:
 |--------------|-------------|
 | `actorCalled('John')` | `core.NewActor("John")` |
 | `WhoCan(CallAnAPI.using(...))` | `WhoCan(api.CallAnApiAt(...))` |
-| `attemptsTo(Send.a(...))` | `AttemptsTo(api.GetRequest(...))` |
+| `attemptsTo(Send.a(...))` | `AttemptsTo(api.SendGetRequest(...))` |
 | `Ensure.that(LastResponse.status(), equals(200))` | `ensure.That(api.LastResponseStatus{}, expectations.Equals(200))` |
 
 ## Development Status
