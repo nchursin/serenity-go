@@ -1,7 +1,5 @@
 package testing
 
-import "testing"
-
 // TestContext provides an interface for test operations and logging
 // that wraps the standard testing.TB interface
 type TestContext interface {
@@ -16,14 +14,4 @@ type TestContext interface {
 
 	// Failed returns true if the test has already failed
 	Failed() bool
-}
-
-// testContext implements TestContext by wrapping testing.TB
-type testContext struct {
-	testing.TB
-}
-
-// NewTestContext creates a new TestContext from a testing.TB
-func NewTestContext(tb testing.TB) TestContext {
-	return &testContext{TB: tb}
 }

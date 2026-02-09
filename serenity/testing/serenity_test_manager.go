@@ -27,7 +27,7 @@ type serenityTest struct {
 // NewSerenityTest creates a new SerenityTest instance
 func NewSerenityTest(t testing.TB) SerenityTest {
 	return &serenityTest{
-		ctx:    NewTestContext(t),
+		ctx:    t,
 		actors: make(map[string]core.Actor),
 	}
 }
