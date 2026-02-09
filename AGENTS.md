@@ -362,11 +362,61 @@ Example:
 - **Language**: Russian responses, English commit messages (as per general instructions)
 - **Pre-commit hooks**: Consider using `make check` as pre-commit validation
 
+## Release Process
+
+### Automated Releases
+- Releases are automatically created on pushes to main/master
+- Uses semantic versioning based on conventional commits
+- CHANGELOG.md is automatically generated from commit messages
+- GitHub releases are created with automated release notes
+
+### Manual Release Process
+```bash
+# Preview next release
+./scripts/release.sh preview
+
+# Prepare release (runs tests, generates changelog)
+./scripts/release.sh prepare
+
+# Create release (commits changelog, triggers GitHub Actions)
+./scripts/release.sh release
+
+# Or use Makefile commands
+make release-dry    # Preview changelog
+make release-prepare # Prepare release
+make release        # Create release
+```
+
+### Versioning Rules
+- **feat**: MINOR version increment (0.1.0 → 0.2.0)
+- **fix**: PATCH version increment (0.1.0 → 0.1.1)
+- **BREAKING CHANGE**: MAJOR version increment (0.1.0 → 1.0.0)
+- Other types (docs, style, refactor, test, chore): No version increment
+
+### Release Checklist
+- [ ] All tests passing (`make test`)
+- [ ] Code linted successfully (`make lint`)
+- [ ] CHANGELOG.md updated automatically
+- [ ] Version tag created and pushed
+- [ ] GitHub release published automatically
+
+### Local Release Tools
+Install required tools for local testing:
+```bash
+# Install git-cliff (macOS)
+curl -L https://github.com/orhun/git-cliff/releases/download/v2.2.2/git-cliff-2.2.2-x86_64-apple-darwin.tar.gz | tar -xz
+sudo mv git-cliff-2.2.2-x86_64-apple-darwin/git-cliff /usr/local/bin/
+
+# For more details, see docs/RELEASING.md
+```
+
 ## Dependencies
 
 - **Go**: Version 1.23.4
 - **Testify**: v1.11.1 for assertions and test utilities
 - **Gomock**: v0.6.0 for interface mocking
 - **Golangci-lint**: For code quality and formatting enforcement
+- **git-cliff**: For automated changelog generation (installed locally)
+- **semantic-release**: For automated versioning (GitHub Actions)
 
 Ensure all dependencies are up to date with `make deps` before development.

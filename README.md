@@ -1,6 +1,6 @@
 # Serenity-Go: Screenplay Pattern Testing Framework for Go
 
-![CI](https://github.com/nchursin/serenity-go/workflows/CI/badge.svg) ![codecov](https://codecov.io/gh/nchursin/serenity-go/graph/badge.svg)
+![CI](https://github.com/nchursin/serenity-go/workflows/CI/badge.svg) ![codecov](https://codecov.io/gh/nchursin/serenity-go/graph/badge.svg) ![Version](https://img.shields.io/github/package-json/v/nchursin/serenity-go?label=version)
 
 A Go implementation of the Serenity/JS Screenplay Pattern for acceptance testing, focused on API testing capabilities.
 
@@ -315,3 +315,7 @@ Apache 2.0 - see LICENSE file for details.
 # Version Badge
 
 ![Version](https://img.shields.io/github/package-json/v/nchursin/serenity-go?label=version)
+
+
+
+

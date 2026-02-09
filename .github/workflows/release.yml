@@ -1,10 +1,10 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-      - master
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -15,48 +15,27 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
-    
+    if: github.event.workflow_run.conclusion == 'success' && !contains(github.event.workflow_run.head_commit.message, '[skip ci]')
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 1.23
 
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-1.23-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-1.23-
-
-    - name: Download dependencies
-      run: go mod download
 
     - name: Install git-cliff
       run: |
         curl -L https://github.com/orhun/git-cliff/releases/download/v2.2.2/git-cliff-2.2.2-x86_64-unknown-linux-gnu.tar.gz | tar -xz
-        sudo mv git-cliff-2.2.2-x86_64-unknown-linux-gnu/git-cliff /usr/local/bin/
+        sudo mv git-cliff-2.2.2/git-cliff /usr/local/bin/
 
     - name: Install go-semantic-release
       run: |
         curl -L https://github.com/go-semantic-release/semantic-release/releases/download/v2.31.0/semantic-release_v2.31.0_linux_amd64 -o /usr/local/bin/semantic-release
         chmod +x /usr/local/bin/semantic-release
-
-    - name: Run tests
-      run: make test
-
-    - name: Run linting
-      run: make lint
 
     - name: Generate changelog
       run: |
@@ -65,24 +44,64 @@ jobs:
     - name: Create release
       id: release
       run: |
+        set -euo pipefail
+        
+        # Debug trap for errors
+        trap 'echo "❌ Error on line $LINENO. Command was: $BASH_COMMAND. Exit code: $?" >&2' ERR
+        
+        echo "🔍 Debugging git state..."
+        echo "Current directory: $(pwd)"
+        echo "Current commit: $(git rev-parse HEAD)"
+        echo "Current branch: $(git branch --show-current)"
+        echo ""
+        echo "🏷️  Available tags before fetch:"
+        git tag --sort=-version:refname | head -10 || echo "No tags found"
+        echo ""
+        echo "📥 Fetching remote tags..."
+        git fetch --tags origin
+        echo ""
+        echo "🏷️  Available tags after fetch:"
+        git tag --sort=-version:refname | head -10 || echo "No tags found after fetch"
+        echo ""
+        echo "📊 Git describe test:"
+        git describe --tags --abbrev=0 || echo "git describe failed"
+        echo ""
         echo "Checking for releasable changes..."
         
         # Check if there are any changes since last release
         LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        echo "📍 LAST_TAG from git describe: '$LAST_TAG'"
         
-        if [ "$LAST_TAG" = "" ]; then
-          echo "No tags found, this will be the first release"
+        # Fallback to alternative method if describe failed
+        if [ -z "$LAST_TAG" ]; then
+            echo "🔄 Trying alternative method to get last tag..."
+            LAST_TAG=$(git tag --sort=-version:refname | head -n 1 2>/dev/null || echo "")
+            echo "📍 LAST_TAG from alternative method: '$LAST_TAG'"
+        fi
+        
+        if [ -z "$LAST_TAG" ] || [ "$LAST_TAG" = "" ]; then
+          echo "✅ No tags found, this will be the first release"
           NEXT_VERSION="v0.1.0"
         else
-          # Count commits since last tag
-          COMMITS_SINCE_TAG=$(git rev-list --count $LAST_TAG..HEAD)
+          echo "✅ Found last tag: $LAST_TAG"
+          
+          # Count commits since last tag with error handling
+          echo "📊 Counting commits since $LAST_TAG..."
+          COMMITS_SINCE_TAG=$(git rev-list --count $LAST_TAG..HEAD 2>/dev/null || echo "0")
+          echo "📈 COMMITS_SINCE_TAG: $COMMITS_SINCE_TAG"
+          
+          if [ -z "$COMMITS_SINCE_TAG" ]; then
+            COMMITS_SINCE_TAG="0"
+          fi
+          
           if [ "$COMMITS_SINCE_TAG" = "0" ]; then
-            echo "No new commits since last tag ($LAST_TAG)"
+            echo "ℹ️  No new commits since last tag ($LAST_TAG)"
             echo "version=" >> $GITHUB_OUTPUT
             exit 0
           fi
-          
+
           # Use simple version increment logic
+          echo "🔍 Analyzing commits for version bump..."
           if git log --format="%s" $LAST_TAG..HEAD | grep -q "^feat"; then
             BUMP="minor"
           elif git log --format="%s" $LAST_TAG..HEAD | grep -q "^fix"; then
@@ -90,34 +109,63 @@ jobs:
           else
             BUMP="patch"
           fi
-          
+
+          echo "🔢 Parsing version from $LAST_TAG..."
           CURRENT_VERSION=${LAST_TAG#v}
-          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-          MAJOR=${VERSION_PARTS[0]}
-          MINOR=${VERSION_PARTS[1]}
-          PATCH=${VERSION_PARTS[2]}
+          echo "  CURRENT_VERSION: $CURRENT_VERSION"
           
+          # Use cut instead of array for better compatibility
+          MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+          MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+          PATCH=$(echo $CURRENT_VERSION | cut -d. -f3)
+          
+          echo "  MAJOR: $MAJOR"
+          echo "  MINOR: $MINOR"
+          echo "  PATCH: $PATCH"
+          echo "  BUMP type: $BUMP"
+          
+          # Validate version parts
+          if [ -z "$MAJOR" ] || [ -z "$MINOR" ] || [ -z "$PATCH" ]; then
+            echo "❌ ERROR: Failed to parse version parts from $CURRENT_VERSION"
+            exit 1
+          fi
+
           case $BUMP in
             "minor")
-              ((MINOR++))
+              MINOR=$((MINOR + 1))
               PATCH=0
               ;;
             "patch")
-              ((PATCH++))
+              PATCH=$((PATCH + 1))
               ;;
             "major")
-              ((MAJOR++))
+              MAJOR=$((MAJOR + 1))
               MINOR=0
               PATCH=0
               ;;
           esac
-          
+
+          echo "  After bump: MAJOR=$MAJOR MINOR=$MINOR PATCH=$PATCH"
           NEXT_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "🎯 Calculated NEXT_VERSION: $NEXT_VERSION"
         fi
         
-        echo "Next version: $NEXT_VERSION"
-        echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+        # Validate that we have a version
+        if [ -z "$NEXT_VERSION" ] || [ "$NEXT_VERSION" = "" ]; then
+            echo "❌ ERROR: NEXT_VERSION is empty or undefined"
+            echo "version=" >> $GITHUB_OUTPUT
+            exit 1
+        fi
         
+        # Validate version format
+        if [[ ! "$NEXT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ ERROR: Invalid version format: $NEXT_VERSION"
+            exit 1
+        fi
+        
+        echo "✅ Successfully determined and validated version: $NEXT_VERSION"
+        echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+
         # Commit changelog update
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
@@ -126,13 +174,13 @@ jobs:
           git commit -m "chore: update changelog for $NEXT_VERSION [skip ci]"
           git push origin main
         fi
-        
+
         # Create tag
         git tag -a $NEXT_VERSION -m "Release $NEXT_VERSION"
-        
+
         # Generate release notes
-        git-cliff --config cliff.toml --tag $NEXT_VERSION --github-release > release_notes.md
-        
+        git-cliff --config github --tag $NEXT_VERSION --github-repo nchursin/serenity-go > release_notes.md
+
         echo "changelog<<EOF" >> $GITHUB_OUTPUT
         cat release_notes.md >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
@@ -140,6 +188,8 @@ jobs:
     - name: Create GitHub Release
       if: steps.release.outputs.version != ''
       uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.release.outputs.version }}
         name: Release ${{ steps.release.outputs.version }}
@@ -147,20 +197,4 @@ jobs:
         generate_release_notes: false
         draft: false
         prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Push tag
-      if: steps.release.outputs.version != ''
-      run: git push origin ${{ steps.release.outputs.version }}
-
-    - name: Update version badge
-      if: steps.release.outputs.version != ''
-      run: |
-        # Update README.md version badge if it exists
-        if grep -q "version-v" README.md; then
-          sed -i.bak "s/version-v[0-9]\+\.[0-9]\+\.[0-9]\+/version-${{ steps.release.outputs.version }}/g" README.md
-          git add README.md
-          git commit -m "docs: update version badge to ${{ steps.release.outputs.version }} [skip ci]"
-          git push origin main
-        fi
