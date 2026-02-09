@@ -312,3 +312,6 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## License
 Apache 2.0 - see LICENSE file for details.
+# Version Badge
+
+![Version](https://img.shields.io/github/package-json/v/nchursin/serenity-go?label=version)
