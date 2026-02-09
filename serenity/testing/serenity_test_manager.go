@@ -2,7 +2,6 @@ package testing
 
 import (
 	"sync"
-	"testing"
 
 	"github.com/nchursin/serenity-go/serenity/abilities"
 	"github.com/nchursin/serenity-go/serenity/core"
@@ -25,7 +24,7 @@ type serenityTest struct {
 }
 
 // NewSerenityTest creates a new SerenityTest instance
-func NewSerenityTest(t testing.TB) SerenityTest {
+func NewSerenityTest(t TestContext) SerenityTest {
 	return &serenityTest{
 		ctx:    t,
 		actors: make(map[string]core.Actor),

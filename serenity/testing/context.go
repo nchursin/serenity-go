@@ -1,5 +1,7 @@
 package testing
 
+//go:generate mockgen -source=context.go -destination=mocks/mock_test_context.go -package=mocks
+
 // TestContext provides an interface for test operations and logging
 // that wraps the standard testing.TB interface
 type TestContext interface {

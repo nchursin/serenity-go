@@ -3,9 +3,9 @@ GOCMD=go
 GOFMT=gofmt
 GOLANGCI=golangci-lint
 
-.PHONY: all build clean test test-v test-coverage test-bench fmt fmt-check vet lint deps check ci help
+.PHONY: all build clean test test-v test-coverage test-bench fmt fmt-check vet lint deps mocks mocks-clean check ci help
 
-all: clean deps fmt lint test
+all: clean deps mocks fmt lint test
 
 # Build
 build:
@@ -19,6 +19,13 @@ clean:
 deps:
 	$(GOCMD) mod download
 	$(GOCMD) mod tidy
+
+# Mocks
+mocks:
+	go generate ./...
+
+mocks-clean:
+	find . -name "mock_*.go" -delete
 
 # Testing
 test:
@@ -57,6 +64,8 @@ help:
 	@echo "  build          - Build the module"
 	@echo "  clean          - Clean build cache"
 	@echo "  deps           - Download and tidy dependencies"
+	@echo "  mocks          - Generate mock files"
+	@echo "  mocks-clean    - Remove generated mock files"
 	@echo "  test           - Run all tests"
 	@echo "  test-v         - Run tests with verbose output"
 	@echo "  test-coverage  - Run tests with coverage"
