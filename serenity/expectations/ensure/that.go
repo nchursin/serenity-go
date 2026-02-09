@@ -47,3 +47,8 @@ func (e *EnsureActivity[T]) PerformAs(actor core.Actor) error {
 
 	return nil
 }
+
+// FailureMode returns the failure mode for ensure activities (default: FailFast)
+func (e *EnsureActivity[T]) FailureMode() core.FailureMode {
+	return core.NonCritical()
+}

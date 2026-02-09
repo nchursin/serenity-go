@@ -19,10 +19,10 @@ type Actor interface {
 	AbilityTo(ability abilities.Ability) (abilities.Ability, error)
 
 	// AttemptsTo performs one or more activities
-	AttemptsTo(activities ...Activity) error
+	AttemptsTo(activities ...Activity)
 
 	// AnswersTo answers a question about the system state
-	AnswersTo(question Question[any]) (any, error)
+	AnswersTo(question Question[any]) (any, bool)
 }
 
 // Activity represents an action that an actor can perform
@@ -32,6 +32,9 @@ type Activity interface {
 
 	// Description returns a human-readable description of the activity
 	Description() string
+
+	// FailureMode returns how the activity should handle failures
+	FailureMode() FailureMode
 }
 
 // Interaction represents a low-level activity (atomic operation)

@@ -50,6 +50,11 @@ func (s *sendRequest) PerformAs(actor core.Actor) error {
 	return nil
 }
 
+// FailureMode returns the failure mode for send requests (default: FailFast)
+func (s *sendRequest) FailureMode() core.FailureMode {
+	return core.FailFast
+}
+
 // RequestBuilder helps build HTTP requests with fluent interface
 type RequestBuilder struct {
 	method  string
@@ -186,6 +191,11 @@ func (ra *RequestActivity) PerformAs(actor core.Actor) error {
 	// Reuse existing sendRequest logic
 	sendReq := &sendRequest{request: req}
 	return sendReq.PerformAs(actor)
+}
+
+// FailureMode returns the failure mode for request activities (default: FailFast)
+func (ra *RequestActivity) FailureMode() core.FailureMode {
+	return core.FailFast
 }
 
 // WithBody adds request body (JSON marshaling for interface{})

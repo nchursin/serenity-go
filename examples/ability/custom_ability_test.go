@@ -12,6 +12,7 @@ import (
 	"github.com/nchursin/serenity-go/serenity/abilities"
 	"github.com/nchursin/serenity-go/serenity/abilities/api"
 	"github.com/nchursin/serenity-go/serenity/core"
+	serenity "github.com/nchursin/serenity-go/serenity/testing"
 )
 
 // FileSystemAbility enables an actor to interact with the file system
@@ -255,6 +256,11 @@ func (w *WriteFileActivity) PerformAs(actor core.Actor) error {
 	return fileManager.WriteFile(w.path, w.content)
 }
 
+// FailureMode returns the failure mode for send requests (default: FailFast)
+func (s *WriteFileActivity) FailureMode() core.FailureMode {
+	return core.FailFast
+}
+
 func (w *WriteFileActivity) Description() string {
 	return fmt.Sprintf("writes file: %s", w.path)
 }
@@ -276,6 +282,11 @@ func (d *DeleteFileActivity) PerformAs(actor core.Actor) error {
 
 	fileManager := ability.(FileSystemAbility)
 	return fileManager.DeleteFile(d.path)
+}
+
+// FailureMode returns the failure mode for send requests (default: FailFast)
+func (d *DeleteFileActivity) FailureMode() core.FailureMode {
+	return core.FailFast
 }
 
 func (d *DeleteFileActivity) Description() string {
@@ -333,15 +344,16 @@ func (f *FileExistsQuestion) Description() string {
 // Tests for FileSystemAbility
 
 func TestFileSystemAbility_BasicOperations(t *testing.T) {
+	test := serenity.NewSerenityTest(t)
+	defer test.Shutdown()
 	tempDir := t.TempDir()
-	actor := core.NewActor("FileTester").WhoCan(ManageFilesIn(tempDir))
+	actor := test.ActorCalled("FileTester").WhoCan(ManageFilesIn(tempDir))
 
 	// Test writing and reading a file
 	testContent := "Hello, World!"
-	err := actor.AttemptsTo(
+	actor.AttemptsTo(
 		WriteFile("test.txt", testContent),
 	)
-	require.NoError(t, err)
 
 	content, err := FileContent("test.txt").AnsweredBy(actor)
 	require.NoError(t, err)
@@ -358,7 +370,7 @@ func TestFileSystemAbility_BasicOperations(t *testing.T) {
 	require.False(t, exists)
 
 	// Test deleting file
-	err = actor.AttemptsTo(
+	actor.AttemptsTo(
 		DeleteFile("test.txt"),
 	)
 	require.NoError(t, err)
@@ -369,8 +381,10 @@ func TestFileSystemAbility_BasicOperations(t *testing.T) {
 }
 
 func TestFileSystemAbility_DirectoryOperations(t *testing.T) {
+	test := serenity.NewSerenityTest(t)
+	defer test.Shutdown()
 	tempDir := t.TempDir()
-	actor := core.NewActor("DirectoryTester").WhoCan(ManageFilesIn(tempDir))
+	actor := test.ActorCalled("DirectoryTester").WhoCan(ManageFilesIn(tempDir))
 
 	// Test creating directory
 	ability, err := actor.AbilityTo(&fileSystemAbility{})
@@ -381,7 +395,7 @@ func TestFileSystemAbility_DirectoryOperations(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check directory exists by creating a file inside it
-	err = actor.AttemptsTo(
+	actor.AttemptsTo(
 		WriteFile("testdir/nested.txt", "nested content"),
 	)
 	require.NoError(t, err)
@@ -519,26 +533,26 @@ func TestFileSystemAbility_ConcurrentAccess(t *testing.T) {
 
 // Integration test showing FileSystemAbility working with other abilities
 func TestFileSystemAbility_WithAPIIntegration(t *testing.T) {
+	test := serenity.NewSerenityTest(t)
+	defer test.Shutdown()
 	tempDir := t.TempDir()
-	actor := core.NewActor("IntegrationTester").WhoCan(
+	actor := test.ActorCalled("IntegrationTester").WhoCan(
 		ManageFilesIn(tempDir),
 		api.CallAnApiAt("https://jsonplaceholder.typicode.com"),
 	)
 
 	// Get data from API
-	err := actor.AttemptsTo(
+	actor.AttemptsTo(
 		api.SendGetRequest("/posts/1"),
 	)
-	require.NoError(t, err)
 
 	// Save API response to file
 	responseBody, err := api.LastResponseBody{}.AnsweredBy(actor)
 	require.NoError(t, err)
 
-	err = actor.AttemptsTo(
+	actor.AttemptsTo(
 		WriteFile("post.json", responseBody),
 	)
-	require.NoError(t, err)
 
 	// Verify file was created and contains expected data
 	fileContent, err := FileContent("post.json").AnsweredBy(actor)

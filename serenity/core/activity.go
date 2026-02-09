@@ -34,6 +34,11 @@ func (t *task) PerformAs(actor Actor) error {
 	return nil
 }
 
+// FailureMode returns the failure mode for tasks (default: FailFast)
+func (t *task) FailureMode() FailureMode {
+	return FailFast
+}
+
 // Where creates a new task with the given description and activities
 // This is a convenience function similar to Serenity/JS Task.where
 func Where(description string, activities ...Activity) Task {
@@ -62,4 +67,9 @@ func (i *interaction) Description() string {
 // PerformAs executes the interaction as the given actor
 func (i *interaction) PerformAs(actor Actor) error {
 	return i.perform(actor)
+}
+
+// FailureMode returns the failure mode for interactions (default: FailFast)
+func (i *interaction) FailureMode() FailureMode {
+	return FailFast
 }
