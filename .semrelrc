@@ -1,0 +1,30 @@
+{
+  "maintainers": [
+    {
+      "name": "nchursin",
+      "email": "nchursin@users.noreply.github.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nchursin/serenity-go.git"
+  },
+  "plugins": [
+    "commit-analyzer",
+    "release-notes-generator",
+    "changelog"
+  ],
+  "commitAnalyzer": {
+    "preset": "conventionalcommits"
+  },
+  "releaseNotesGenerator": {
+    "preset": "conventionalcommits",
+    "writerOpts": {
+      "commitsSort": ["subject", "scope"]
+    }
+  },
+  "changelog": {
+    "file": "CHANGELOG.md",
+    "changelogTitle": "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."
+  }
+}
