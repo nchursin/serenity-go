@@ -367,8 +367,9 @@ Example:
 ### Automated Releases
 - Releases are automatically created on pushes to main/master
 - Uses semantic versioning based on conventional commits
-- CHANGELOG.md is automatically generated from commit messages
-- GitHub releases are created with automated release notes
+- CHANGELOG.md is automatically generated from commit messages using `cliff.toml`
+- GitHub releases are created with release notes containing only current version changes (using `cliff-github.toml`)
+- Full changelog is maintained in CHANGELOG.md, GitHub releases show version-specific changes
 
 ### Manual Release Process
 ```bash

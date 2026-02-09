@@ -178,8 +178,8 @@ jobs:
         # Create tag
         git tag -a $NEXT_VERSION -m "Release $NEXT_VERSION"
 
-        # Generate release notes
-        git-cliff --config github --tag $NEXT_VERSION --github-repo nchursin/serenity-go > release_notes.md
+        # Generate release notes for current version only
+        git-cliff --config cliff-github.toml --latest --tag $NEXT_VERSION > release_notes.md
 
         echo "changelog<<EOF" >> $GITHUB_OUTPUT
         cat release_notes.md >> $GITHUB_OUTPUT

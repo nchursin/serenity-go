@@ -1,0 +1,53 @@
+# git-cliff configuration for GitHub releases
+# Minimal template optimized for release notes (no changelog history)
+
+[changelog]
+# No header for GitHub releases
+header = ""
+
+# Minimal body template for current release only
+body = """
+## {{ version | trim_start_matches(pat="v") }}
+
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+{% for commit in commits %}
+- {% if commit.scope %}*({{ commit.scope }})* {% endif %}{% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message | upper_first }}
+{% endfor %}
+{% endfor %}
+
+{% if version and previous_version -%}
+**Full Changelog**: https://github.com/nchursin/serenity-go/compare/{{ previous_version }}...{{ version }}
+{%- elif version -%}
+**Full Changelog**: https://github.com/nchursin/serenity-go/commits/{{ version }}
+{%- endif %}
+"""
+
+# No footer for GitHub releases  
+footer = ""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+commit_parsers = [
+    { message = "^feat", group = "🚀 Features" },
+    { message = "^fix", group = "🐛 Bug Fixes" },
+    { message = "^doc", group = "📚 Documentation" },
+    { message = "^perf", group = "⚡ Performance" },
+    { message = "^refactor", group = "🚜 Refactor" },
+    { message = "^style", group = "🎨 Styling" },
+    { message = "^test", group = "🧪 Testing" },
+    { message = "^chore\\(release\\): prepare for", skip = true },
+    { message = "^chore\\(deps.*\\)", skip = true },
+    { message = "^chore\\(pr\\)", skip = true },
+    { message = "^chore\\(pull\\)", skip = true },
+    { message = "^chore|^ci", group = "⚙️ Miscellaneous Tasks" },
+    { body = ".*security", group = "🛡️ Security" },
+    { message = "^revert", group = "◀️ Revert" },
+]
+protect_breaking_commits = false
+filter_commits = false
+topo_order = false
+sort_commits = "oldest"
