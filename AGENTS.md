@@ -11,7 +11,7 @@ Serenity-Go is a Go implementation of the Serenity/JS Screenplay Pattern for acc
 ### Primary Commands (Use Makefile)
 ```bash
 # Full development cycle
-make all              # clean deps fmt lint test
+make all              # clean deps mocks fmt lint test
 
 # Testing commands
 make test             # go test ./...
@@ -27,10 +27,14 @@ make vet              # go vet ./...
 make check            # fmt-check lint test
 make ci               # fmt lint test (for CI)
 
-# Dependencies
+# Dependencies and Build
 make deps             # go mod download && go mod tidy
 make build            # go build ./...
 make clean            # go clean -cache
+
+# Mocks
+make mocks            # go generate ./...
+make mocks-clean      # find . -name "mock_*.go" -delete
 ```
 
 ### Direct Go Commands (Fallback)
@@ -45,6 +49,7 @@ go test -v ./...
 go test ./serenity/core -v
 go test ./serenity/abilities/api -v
 go test ./serenity/expectations -v
+go test ./serenity/testing -v
 go test ./examples -v
 
 # Run a single test
@@ -64,6 +69,9 @@ go build ./...
 # Clean build cache
 go clean -cache
 
+# Generate mocks
+go generate ./...
+
 # Dependency management
 go mod download
 go mod tidy
@@ -82,23 +90,30 @@ go get -u ./...
 Example:
 ```go
 import (
+    "bytes"
+    "encoding/json"
     "fmt"
-    "sync"
-    
+    "io"
+    "net/http"
+    "time"
+
     "github.com/stretchr/testify/require"
+    "go.uber.org/mock/gomock"
     
     "github.com/nchursin/serenity-go/serenity/core"
     "github.com/nchursin/serenity-go/serenity/abilities/api"
+    "github.com/nchursin/serenity-go/serenity/testing"
 )
 ```
 
 ### Naming Conventions
-- **Package names**: lowercase, single word when possible (e.g., `core`, `api`, `expectations`)
-- **Public functions/types**: PascalCase (e.g., `NewActor`, `RequestBuilder`)
-- **Private functions/types**: camelCase (e.g., `sendRequest`, `abilityTypeOf`)
+- **Package names**: lowercase, single word when possible (e.g., `core`, `api`, `expectations`, `testing`)
+- **Public functions/types**: PascalCase (e.g., `NewActor`, `RequestBuilder`, `NewSerenityTest`)
+- **Private functions/types**: camelCase (e.g., `sendRequest`, `abilityTypeOf`, `callAnAPI`)
 - **Interfaces**: Often include type parameter for generics (e.g., `Question[T any]`, `Expectation[T any]`)
 - **Constants**: PascalCase for exported, camelCase for unexported
 - **Variables**: camelCase for both exported and unexported
+- **Mock files**: prefixed with `mock_` and generated in `mocks/` subdirectories
 
 ### Type and Interface Design
 - Use generics for type-safe interfaces with `T any` syntax
@@ -112,6 +127,14 @@ type Question[T any] interface {
     AnsweredBy(actor Actor) (T, error)
     Description() string
 }
+
+type Actor interface {
+    Name() string
+    WhoCan(abilities ...abilities.Ability) Actor
+    AbilityTo(ability abilities.Ability) (abilities.Ability, error)
+    AttemptsTo(activities ...Activity)
+    AnswersTo(question Question[any]) (any, bool)
+}
 ```
 
 ### Error Handling
@@ -119,6 +142,7 @@ type Question[T any] interface {
 - Return early from functions when errors occur
 - Use descriptive error messages that include context
 - Test error paths in unit tests
+- New TestContext API automatically handles test failures without manual `require.NoError`
 
 Example:
 ```go
@@ -132,6 +156,7 @@ if err := someOperation(); err != nil {
 - Use builder patterns for complex object construction
 - Chain method calls where it improves readability
 - Use descriptive function names that explain what they do
+- Split large files into focused files by responsibility
 
 Example:
 ```go
@@ -178,11 +203,29 @@ func (a *actor) WhoCan(abilities ...Ability) Actor {
 
 ### Testing Patterns
 - Write table-driven tests when testing multiple scenarios
-- Use testify/require for assertions that stop test execution
+- Use testify/require for assertions that stop test execution (legacy approach)
+- New TestContext API eliminates need for manual `require.NoError` calls
 - Use descriptive test names that explain what is being tested
 - Follow the arrange-act-assert pattern
+- Use gomock for interface mocking when needed
 
-Example:
+Example (New TestContext API):
+```go
+func TestJSONPlaceholderBasics(t *testing.T) {
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
+    apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
+
+    apiTester.AttemptsTo(
+        api.SendGetRequest("/posts"),
+        ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+        ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
+    )
+}
+```
+
+Example (Legacy with require):
 ```go
 func TestJSONPlaceholderBasics(t *testing.T) {
     actor := core.NewActor("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
@@ -190,7 +233,6 @@ func TestJSONPlaceholderBasics(t *testing.T) {
     err := actor.AttemptsTo(
         api.SendGetRequest("/posts"),
         ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
-        ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
     )
     require.NoError(t, err)
 }
@@ -199,8 +241,9 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 ### Linting Configuration (.golangci.yml)
 - **Line length**: 120 characters
 - **Enabled linters**: errcheck, gosec, govet, ineffassign, misspell, staticcheck, unconvert, unused
-- **Exclusions**: _test.go files, examples/ directory
+- **Exclusions**: _test.go files, examples/ directory, generated files
 - **Formatters**: gofmt, goimports with local prefix `github.com/nchursin/serenity-go`
+- **Mock files**: Generated with `go generate` using gomock
 
 ### Documentation
 - Include package-level documentation explaining the purpose
@@ -214,17 +257,28 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 serenity-go/
 ├── serenity/
 │   ├── core/              # Core interfaces and actor implementation
-│   ├── abilities/          # Actor abilities (API, etc.)
+│   ├── abilities/         # Actor abilities (API, etc.)
+│   │   ├── ability.go     # Base ability interface
 │   │   └── api/           # HTTP API testing capabilities
 │   ├── expectations/      # Assertion system and expectations
 │   │   ├── ensure/        # Ensure-style assertions
-│   │   └── [various].go   # Different expectation types
+│   │   ├── equals.go      # Equality expectations
+│   │   ├── contains.go    # Contains expectations
+│   │   ├── comparison.go  # Comparison expectations
+│   │   └── collection.go   # Collection expectations
+│   ├── testing/           # TestContext and testing utilities
+│   │   ├── context.go     # New TestContext API
+│   │   ├── actor.go       # Test-aware actor implementation
+│   │   └── mocks/         # Generated mocks
 │   └── reporting/         # Test reporting and output
 ├── examples/              # Usage examples and integration tests
-├── docs/                  # Project documentation
+│   ├── demo_new_api_test.go
+│   ├── basic_test_new_api_test.go
+│   └── ability/
 ├── go.mod                 # Go module definition
 ├── Makefile              # Build and development commands
 ├── .golangci.yml         # Linting configuration
+├── .gitignore            # Git ignore patterns
 └── README.md             # Project documentation
 ```
 
@@ -234,6 +288,7 @@ serenity-go/
 - Tests should describe what actors do, not how they do it
 - Create actors with descriptive names (e.g., "APITester", "Admin", "RegularUser")
 - Give actors only the abilities they need for their role
+- Use TestContext.ActorCalled() for new tests, core.NewActor() for legacy tests
 
 ### Activity Composition
 - Use interactions for low-level operations (HTTP requests, database queries)
@@ -245,6 +300,19 @@ serenity-go/
 - Chain questions with assertions for validation
 - Keep questions focused on single pieces of information
 
+## Mock Generation and Testing
+
+### Using Gomock
+- Generate mocks with `make mocks` or `go generate ./...`
+- Mock files are created in `mocks/` subdirectories
+- Use mock interfaces for testing complex interactions
+- Clean generated mocks with `make mocks-clean`
+
+Example:
+```go
+//go:generate mockgen -source=interfaces.go -destination=mocks/mock_actor.go -package=mocks
+```
+
 ## Development Workflow
 
 1. **Setup**: Run `make deps` to ensure dependencies are current
@@ -252,17 +320,40 @@ serenity-go/
 3. **Testing**: Run `make test-v` for verbose output during development
 4. **Pre-commit**: Run `make check` (fmt-check, lint, test) before committing
 5. **CI**: Use `make ci` for automated pipeline (fmt, lint, test)
+6. **Mocks**: Regenerate mocks with `make mocks` when interfaces change
 
 ## Common Gotchas
 
 - Always use the full module path for local imports
 - Remember that generic type parameters use `T any` syntax
-- Use testify/require for assertions that should stop test execution
+- Use TestContext API for new tests to avoid manual error handling
+- Use testify/require for assertions that should stop test execution (legacy)
 - Mutex usage patterns: RLock/RUnlock for read-heavy operations, Lock/Unlock for writes
 - Error wrapping should use `%w` verb, not `%s`
 - golangci-lint will automatically format imports with goimports
 - Line length is enforced at 120 characters
 - Examples directory is excluded from most linting rules
+- Mock files should be regenerated when interface definitions change
+- Use `go generate` or `make mocks` to regenerate all mocks at once
+
+## API Testing Specifics
+
+### Request Building
+- Use RequestBuilder for fluent HTTP request construction
+- Methods: `WithHeader()`, `WithHeaders()`, `WithBody()`, `WithJSONBody()`
+- Automatic JSON marshaling for interface{} data
+- Call `Build()` to create the final http.Request
+
+### Common Activities
+- `api.SendGetRequest(path)`
+- `api.SendPostRequest(path).With(data)`
+- `api.SendRequest(method, path).WithHeader(key, value).With(data)`
+- `ensure.That(question, expectation)` for assertions
+
+### Questions
+- `api.LastResponseStatus{}` - get HTTP status code
+- `api.LastResponseBody{}` - get response body as string
+- `api.LastResponseHeaders{}` - get response headers
 
 ## Git Configuration
 
@@ -270,3 +361,12 @@ serenity-go/
 - **Commit messages**: Follow conventional commits format
 - **Language**: Russian responses, English commit messages (as per general instructions)
 - **Pre-commit hooks**: Consider using `make check` as pre-commit validation
+
+## Dependencies
+
+- **Go**: Version 1.23.4
+- **Testify**: v1.11.1 for assertions and test utilities
+- **Gomock**: v0.6.0 for interface mocking
+- **Golangci-lint**: For code quality and formatting enforcement
+
+Ensure all dependencies are up to date with `make deps` before development.
