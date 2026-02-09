@@ -1,0 +1,166 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.23
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-1.23-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-1.23-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Install git-cliff
+      run: |
+        curl -L https://github.com/orhun/git-cliff/releases/download/v2.2.2/git-cliff-2.2.2-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+        sudo mv git-cliff-2.2.2-x86_64-unknown-linux-gnu/git-cliff /usr/local/bin/
+
+    - name: Install go-semantic-release
+      run: |
+        curl -L https://github.com/go-semantic-release/semantic-release/releases/download/v2.31.0/semantic-release_v2.31.0_linux_amd64 -o /usr/local/bin/semantic-release
+        chmod +x /usr/local/bin/semantic-release
+
+    - name: Run tests
+      run: make test
+
+    - name: Run linting
+      run: make lint
+
+    - name: Generate changelog
+      run: |
+        git-cliff --latest --config cliff.toml --output CHANGELOG.md
+
+    - name: Create release
+      id: release
+      run: |
+        echo "Checking for releasable changes..."
+        
+        # Check if there are any changes since last release
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        
+        if [ "$LAST_TAG" = "" ]; then
+          echo "No tags found, this will be the first release"
+          NEXT_VERSION="v0.1.0"
+        else
+          # Count commits since last tag
+          COMMITS_SINCE_TAG=$(git rev-list --count $LAST_TAG..HEAD)
+          if [ "$COMMITS_SINCE_TAG" = "0" ]; then
+            echo "No new commits since last tag ($LAST_TAG)"
+            echo "version=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Use simple version increment logic
+          if git log --format="%s" $LAST_TAG..HEAD | grep -q "^feat"; then
+            BUMP="minor"
+          elif git log --format="%s" $LAST_TAG..HEAD | grep -q "^fix"; then
+            BUMP="patch"
+          else
+            BUMP="patch"
+          fi
+          
+          CURRENT_VERSION=${LAST_TAG#v}
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          case $BUMP in
+            "minor")
+              ((MINOR++))
+              PATCH=0
+              ;;
+            "patch")
+              ((PATCH++))
+              ;;
+            "major")
+              ((MAJOR++))
+              MINOR=0
+              PATCH=0
+              ;;
+          esac
+          
+          NEXT_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+        fi
+        
+        echo "Next version: $NEXT_VERSION"
+        echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+        
+        # Commit changelog update
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add CHANGELOG.md
+        if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
+          git commit -m "chore: update changelog for $NEXT_VERSION [skip ci]"
+          git push origin main
+        fi
+        
+        # Create tag
+        git tag -a $NEXT_VERSION -m "Release $NEXT_VERSION"
+        
+        # Generate release notes
+        git-cliff --config cliff.toml --tag $NEXT_VERSION --github-release > release_notes.md
+        
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat release_notes.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      if: steps.release.outputs.version != ''
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.release.outputs.version }}
+        name: Release ${{ steps.release.outputs.version }}
+        body: ${{ steps.release.outputs.changelog }}
+        generate_release_notes: false
+        draft: false
+        prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push tag
+      if: steps.release.outputs.version != ''
+      run: git push origin ${{ steps.release.outputs.version }}
+
+    - name: Update version badge
+      if: steps.release.outputs.version != ''
+      run: |
+        # Update README.md version badge if it exists
+        if grep -q "version-v" README.md; then
+          sed -i.bak "s/version-v[0-9]\+\.[0-9]\+\.[0-9]\+/version-${{ steps.release.outputs.version }}/g" README.md
+          git add README.md
+          git commit -m "docs: update version badge to ${{ steps.release.outputs.version }} [skip ci]"
+          git push origin main
+        fi
