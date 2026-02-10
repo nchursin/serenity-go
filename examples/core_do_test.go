@@ -17,7 +17,7 @@ func TestCoreDoFunction(t *testing.T) {
 
 	// Test the new core.Do function with FailFast mode
 	actor.AttemptsTo(
-		core.Do("perform a simple action", func(actor core.Actor) error {
+		core.Do("#actor performs a simple action", func(actor core.Actor) error {
 			// Simple test action
 			t.Logf("Actor %s is performing a custom action", actor.Name())
 			return nil
@@ -26,7 +26,7 @@ func TestCoreDoFunction(t *testing.T) {
 
 	// Test core.Do with access to actor abilities
 	actor.AttemptsTo(
-		core.Do("access actor information", func(actor core.Actor) error {
+		core.Do("#actor accesses actor information", func(actor core.Actor) error {
 			// Verify we can access actor properties
 			if actor.Name() != "TestActor" {
 				return fmt.Errorf("expected actor name 'TestActor', got '%s'", actor.Name())

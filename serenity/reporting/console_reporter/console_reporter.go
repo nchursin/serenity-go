@@ -5,21 +5,33 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/nchursin/serenity-go/serenity/reporting"
 )
+
+// activeStep represents a currently executing step
+type activeStep struct {
+	description string
+	indentLevel int
+	startTime   time.Time
+}
 
 // ConsoleReporter provides console-based test reporting
 type ConsoleReporter struct {
 	output      io.Writer
 	currentTest string
 	indentLevel int
+	mutex       sync.RWMutex
+	activeSteps map[string]*activeStep // key: description + indent
 }
 
 // NewConsoleReporter creates a new console reporter
 func NewConsoleReporter() *ConsoleReporter {
 	return &ConsoleReporter{
-		output: os.Stdout,
+		output:      os.Stdout,
+		activeSteps: make(map[string]*activeStep),
 	}
 }
 
@@ -62,22 +74,35 @@ func (cr *ConsoleReporter) OnTestFinish(result reporting.TestResult) {
 func (cr *ConsoleReporter) OnStepStart(stepDescription string) {
 	cr.indentLevel++
 	description := cr.formatStepDescription(stepDescription)
-	cr.writeLine("%s🔄 %s", cr.getIndent(), description)
+
+	// Add to active steps for tracking
+	cr.addActiveStep(description, cr.indentLevel)
+
+	// Write step start with carriage return to allow overwriting
+	indent := cr.getIndent()
+	cr.writeWithoutNewline("%s🔄 %s", indent, description)
 }
 
 // OnStepFinish is called when a step/activity completes
 func (cr *ConsoleReporter) OnStepFinish(stepResult reporting.TestResult) {
-	emoji := "✅"
+	description := cr.formatStepDescription(stepResult.Name())
 
+	// Remove from active steps
+	cr.removeActiveStep(description, cr.indentLevel)
+
+	emoji := "✅"
 	if stepResult.Status() == reporting.StatusFailed {
 		emoji = "❌"
 	}
 
-	description := cr.formatStepDescription(stepResult.Name())
-	cr.writeLine("%s%s %s (%.2fs)", cr.getIndent(), emoji, description, stepResult.Duration())
+	indent := cr.getIndent()
 
+	// Overwrite the current line with completion status
+	cr.writeOverLine("%s%s %s (%.2fs)", indent, emoji, description, stepResult.Duration())
+
+	// Handle error output on separate line if there's an error
 	if stepResult.Error() != nil {
-		cr.writeLine("%s   Error: %s", cr.getIndent(), stepResult.Error().Error())
+		cr.writeLine("%s   Error: %s", indent, stepResult.Error().Error())
 	}
 
 	cr.indentLevel--
@@ -109,6 +134,61 @@ func (cr *ConsoleReporter) formatStepDescription(description string) string {
 	}
 
 	return formatted
+}
+
+// getStepKey generates a unique key for a step
+func (cr *ConsoleReporter) getStepKey(description string, indentLevel int) string {
+	return fmt.Sprintf("%d:%s", indentLevel, description)
+}
+
+// addActiveStep adds a new active step
+func (cr *ConsoleReporter) addActiveStep(description string, indentLevel int) {
+	cr.mutex.Lock()
+	defer cr.mutex.Unlock()
+
+	key := cr.getStepKey(description, indentLevel)
+	cr.activeSteps[key] = &activeStep{
+		description: description,
+		indentLevel: indentLevel,
+		startTime:   time.Now(),
+	}
+}
+
+// removeActiveStep removes and returns the active step
+func (cr *ConsoleReporter) removeActiveStep(description string, indentLevel int) *activeStep {
+	cr.mutex.Lock()
+	defer cr.mutex.Unlock()
+
+	key := cr.getStepKey(description, indentLevel)
+	if step, exists := cr.activeSteps[key]; exists {
+		delete(cr.activeSteps, key)
+		return step
+	}
+	return nil
+}
+
+// writeWithoutNewline writes without newline and with carriage return for line replacement
+func (cr *ConsoleReporter) writeWithoutNewline(format string, args ...interface{}) {
+	if cr.output != nil {
+		_, _ = fmt.Fprintf(cr.output, format, args...)
+	}
+}
+
+// clearLine clears the current line and moves cursor to beginning
+func (cr *ConsoleReporter) clearLine() {
+	if cr.output != nil {
+		// Move cursor to beginning of line
+		_, _ = fmt.Fprintf(cr.output, "\r")
+	}
+}
+
+// writeOverLine clears the current line and writes new content
+func (cr *ConsoleReporter) writeOverLine(format string, args ...interface{}) {
+	if cr.output != nil {
+		content := fmt.Sprintf(format, args...)
+		// Clear line completely and write new content
+		_, _ = fmt.Fprintf(cr.output, "\r%s\n", content)
+	}
 }
 
 // getIndent returns the current indentation string

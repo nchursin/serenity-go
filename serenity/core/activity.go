@@ -61,7 +61,7 @@ func Do(description string, perform func(actor Actor) error) Interaction {
 
 // Description returns the interaction description
 func (i *interaction) Description() string {
-	return fmt.Sprintf("#actor %s", i.description)
+	return i.description
 }
 
 // PerformAs executes the interaction as the given actor
