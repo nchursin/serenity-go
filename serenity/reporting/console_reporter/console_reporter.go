@@ -42,8 +42,10 @@ func (cr *ConsoleReporter) SetOutput(w io.Writer) {
 
 // OnTestStart is called when a test begins
 func (cr *ConsoleReporter) OnTestStart(testName string) {
+	cr.mutex.Lock()
 	cr.currentTest = testName
 	cr.indentLevel = 0
+	cr.mutex.Unlock()
 	cr.writeLine("🚀 Starting: %s", testName)
 }
 
@@ -72,11 +74,14 @@ func (cr *ConsoleReporter) OnTestFinish(result reporting.TestResult) {
 
 // OnStepStart is called when a step/activity begins
 func (cr *ConsoleReporter) OnStepStart(stepDescription string) {
+	cr.mutex.Lock()
 	cr.indentLevel++
 	description := cr.formatStepDescription(stepDescription)
+	indentLevel := cr.indentLevel
+	cr.mutex.Unlock()
 
 	// Add to active steps for tracking
-	cr.addActiveStep(description, cr.indentLevel)
+	cr.addActiveStep(description, indentLevel)
 
 	// Write step start with carriage return to allow overwriting
 	indent := cr.getIndent()
@@ -85,10 +90,13 @@ func (cr *ConsoleReporter) OnStepStart(stepDescription string) {
 
 // OnStepFinish is called when a step/activity completes
 func (cr *ConsoleReporter) OnStepFinish(stepResult reporting.TestResult) {
+	cr.mutex.Lock()
 	description := cr.formatStepDescription(stepResult.Name())
+	indentLevel := cr.indentLevel
+	cr.mutex.Unlock()
 
 	// Remove from active steps
-	cr.removeActiveStep(description, cr.indentLevel)
+	cr.removeActiveStep(description, indentLevel)
 
 	emoji := "✅"
 	if stepResult.Status() == reporting.StatusFailed {
@@ -105,7 +113,9 @@ func (cr *ConsoleReporter) OnStepFinish(stepResult reporting.TestResult) {
 		cr.writeLine("%s   Error: %s", indent, stepResult.Error().Error())
 	}
 
+	cr.mutex.Lock()
 	cr.indentLevel--
+	cr.mutex.Unlock()
 }
 
 // formatStepDescription formats step descriptions for better readability
@@ -169,6 +179,8 @@ func (cr *ConsoleReporter) removeActiveStep(description string, indentLevel int)
 
 // writeWithoutNewline writes without newline and with carriage return for line replacement
 func (cr *ConsoleReporter) writeWithoutNewline(format string, args ...interface{}) {
+	cr.mutex.Lock()
+	defer cr.mutex.Unlock()
 	if cr.output != nil {
 		_, _ = fmt.Fprintf(cr.output, format, args...)
 	}
@@ -176,6 +188,8 @@ func (cr *ConsoleReporter) writeWithoutNewline(format string, args ...interface{
 
 // writeOverLine clears the current line and writes new content
 func (cr *ConsoleReporter) writeOverLine(format string, args ...interface{}) {
+	cr.mutex.Lock()
+	defer cr.mutex.Unlock()
 	if cr.output != nil {
 		content := fmt.Sprintf(format, args...)
 		// Clear line completely and write new content
@@ -185,11 +199,15 @@ func (cr *ConsoleReporter) writeOverLine(format string, args ...interface{}) {
 
 // getIndent returns the current indentation string
 func (cr *ConsoleReporter) getIndent() string {
+	cr.mutex.RLock()
+	defer cr.mutex.RUnlock()
 	return strings.Repeat("  ", cr.indentLevel)
 }
 
 // writeLine writes a formatted line to the output
 func (cr *ConsoleReporter) writeLine(format string, args ...interface{}) {
+	cr.mutex.Lock()
+	defer cr.mutex.Unlock()
 	if cr.output != nil {
 		_, _ = fmt.Fprintf(cr.output, format+"\n", args...)
 	}

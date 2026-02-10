@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
 
 	"github.com/nchursin/serenity-go/serenity/abilities"
 )
@@ -26,6 +27,7 @@ type callAnAPI struct {
 	client       *http.Client
 	baseURL      string
 	lastResponse *http.Response
+	mutex        sync.RWMutex
 }
 
 // Using creates a new CallAnAPI ability with the given HTTP client
@@ -48,13 +50,17 @@ func CallAnApiAt(baseURL string) CallAnAPI {
 // SendRequest sends an HTTP request and stores the response
 func (c *callAnAPI) SendRequest(req *http.Request) (*http.Response, error) {
 	// Apply base URL if request URL is relative
-	if c.baseURL != "" && req.URL != nil && !req.URL.IsAbs() {
-		baseURL, err := url.Parse(c.baseURL)
+	c.mutex.RLock()
+	baseURL := c.baseURL
+	c.mutex.RUnlock()
+
+	if baseURL != "" && req.URL != nil && !req.URL.IsAbs() {
+		parsedBaseURL, err := url.Parse(baseURL)
 		if err != nil {
 			return nil, fmt.Errorf("invalid base URL: %w", err)
 		}
 
-		req.URL = baseURL.ResolveReference(req.URL)
+		req.URL = parsedBaseURL.ResolveReference(req.URL)
 	}
 
 	resp, err := c.client.Do(req)
@@ -63,13 +69,17 @@ func (c *callAnAPI) SendRequest(req *http.Request) (*http.Response, error) {
 	}
 
 	// Store the response for later retrieval
+	c.mutex.Lock()
 	c.lastResponse = resp
+	c.mutex.Unlock()
 
 	return resp, nil
 }
 
 // LastResponse returns the most recent response
 func (c *callAnAPI) LastResponse() *http.Response {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	return c.lastResponse
 }
 
@@ -80,17 +90,23 @@ func (c *callAnAPI) SetBaseURL(baseURL string) error {
 		return fmt.Errorf("invalid base URL: %w", err)
 	}
 
+	c.mutex.Lock()
 	c.baseURL = baseURL
+	c.mutex.Unlock()
 	return nil
 }
 
 // GetBaseURL returns the current base URL
 func (c *callAnAPI) GetBaseURL() string {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
 	return c.baseURL
 }
 
 // withBaseURL sets the base URL and returns the ability for chaining
 func (c *callAnAPI) withBaseURL(baseURL string) CallAnAPI {
+	c.mutex.Lock()
 	c.baseURL = baseURL
+	c.mutex.Unlock()
 	return c
 }
