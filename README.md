@@ -218,6 +218,106 @@ err := actor.AttemptsTo(
 )
 ```
 
+## Console Reporting
+
+Serenity-Go provides automatic console reporting for test results with emoji indicators, timing information, and detailed error messages.
+
+### Automatic Integration
+
+The TestContext API automatically provides console reporting:
+
+```go
+func TestAPITesting(t *testing.T) {
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
+    actor := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
+
+    actor.AttemptsTo(
+        api.SendGetRequest("/posts"),
+        ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+    )
+}
+```
+
+Console output:
+```
+🚀 Starting: TestAPITesting
+  🔄 Sends GET request to /posts
+  ✅ Sends GET request to /posts (0.21s)
+  🔄 Ensures that the last response status code equals 200
+  ✅ Ensures that the last response status code equals 200 (0.00s)
+✅ TestAPITesting: PASSED (0.26s)
+```
+
+### Output Format
+
+| Status | Emoji | Description |
+|--------|-------|-------------|
+| ✅ | ✅ | Test passed |
+| ❌ | ❌ | Test failed |
+| ⚠️ | ⚠️ | Warning (unused actor) |
+
+Example output:
+```
+🚀 Starting: TestAPITesting
+  🔄 Sends GET request to /posts
+  ✅ Sends GET request to /posts (0.21s)
+  🔄 Ensures that the last response status code equals 200
+  ✅ Ensures that the last response status code equals 200 (0.00s)
+✅ TestAPITesting: PASSED (0.26s)
+
+🚀 Starting: TestFailedExpectation
+  🔄 Sends GET request to /posts
+  ❌ Sends GET request to /posts (0.15s)
+     Error: Expected status code to equal 200, but got 404
+❌ TestFailedExpectation: FAILED (0.15s)
+```
+
+### Custom Configuration
+
+```go
+import (
+    "os"
+    "github.com/nchursin/serenity-go/serenity/reporting/console_reporter"
+    serenity "github.com/nchursin/serenity-go/serenity/testing"
+)
+
+// Create custom console reporter
+reporter := console_reporter.NewConsoleReporter()
+
+test := serenity.NewSerenityTestWithReporter(t, reporter)
+defer test.Shutdown()
+```
+
+For detailed documentation on console reporting, see [docs/reporting.md](docs/reporting.md).
+
+### File Output
+
+```go
+import (
+    "os"
+    "github.com/nchursin/serenity-go/serenity/reporting/console_reporter"
+    serenity "github.com/nchursin/serenity-go/serenity/testing"
+)
+
+// Create file for output
+file, err := os.Create("test-results.txt")
+if err != nil {
+    t.Fatalf("Failed to create file: %v", err)
+}
+defer file.Close()
+
+// Create reporter with file output
+reporter := console_reporter.NewConsoleReporter()
+reporter.SetOutput(file)
+
+test := serenity.NewSerenityTestWithReporter(t, reporter)
+defer test.Shutdown()
+```
+
+For detailed documentation on console reporting, see [docs/reporting.md](docs/reporting.md).
+
 ## Working Examples
 
 The `examples/` directory contains working examples with real APIs:
@@ -242,7 +342,8 @@ For detailed `Satisfies` examples, see [docs/SATISFIES_EXAMPLES.md](docs/SATISFI
 - **serenity/abilities/api/** - HTTP API testing capabilities
 - **serenity/expectations/** - Assertion system and expectations
 - **serenity/expectations/ensure/** - Ensure-style assertions
-- **serenity/reporting/** - Test reporting and output
+- **serenity/testing/** - TestContext API and testing utilities
+- **serenity/reporting/** - Console reporting and output utilities
 
 ### Design Principles
 
@@ -268,7 +369,7 @@ actor.AttemptsTo(customInteraction)
 ### Custom Questions
 
 ```go
-customQuestion := core.Of[int]("asks for custom value", func(actor core.Actor) (int, error) {
+customQuestion := core.Of[int]("custom value", func(actor core.Actor) (int, error) {
     // Your custom logic here
     return 42, nil
 })

@@ -85,11 +85,26 @@ func (cr *ConsoleReporter) OnStepFinish(stepResult reporting.TestResult) {
 
 // formatStepDescription formats step descriptions for better readability
 func (cr *ConsoleReporter) formatStepDescription(description string) string {
-	// Remove #actor prefix if present
-	formatted := strings.ReplaceAll(description, "#actor ", "")
+	// Remove #actor prefix only if no actor name is present (backward compatibility)
+	formatted := description
+	if len(formatted) >= 7 && formatted[:7] == "#actor " {
+		// Check if it's a plain #actor without actor name
+		remaining := formatted[7:] // Remove "#actor "
+		if len(remaining) > 0 && !strings.HasPrefix(remaining, " ") {
+			// This looks like "#actorSomething" not "#actor Something"
+			formatted = remaining
+		} else {
+			// This is "#actor " pattern, remove it
+			formatted = remaining
+		}
+	} else {
+		// No #actor prefix, description likely already has actor name
+		// Just ensure proper capitalization
+		formatted = description
+	}
 
-	// Capitalize first letter
-	if len(formatted) > 0 {
+	// Capitalize first letter only if it's not already capitalized
+	if len(formatted) > 0 && formatted[0] >= 'a' && formatted[0] <= 'z' {
 		formatted = strings.ToUpper(formatted[:1]) + formatted[1:]
 	}
 

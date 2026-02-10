@@ -31,7 +31,10 @@ func That[T any](question core.Question[T], expectation Expectation[T]) core.Act
 
 // Description returns the activity description
 func (e *EnsureActivity[T]) Description() string {
-	return fmt.Sprintf("#actor ensures that %s %s", e.question.Description(), e.expectation.Description())
+	questionDesc := e.question.Description()
+	expectationDesc := e.expectation.Description()
+
+	return fmt.Sprintf("#actor ensures that %s %s", questionDesc, expectationDesc)
 }
 
 // PerformAs executes the ensure activity

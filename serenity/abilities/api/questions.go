@@ -31,7 +31,7 @@ func (lr LastResponseStatus) AnsweredBy(actor core.Actor) (int, error) {
 
 // Description returns the question description
 func (lr LastResponseStatus) Description() string {
-	return "asks for the last response status code"
+	return "the last response status code"
 }
 
 // LastResponseBody returns the body of the last response
@@ -66,7 +66,7 @@ func (lr LastResponseBody) AnsweredBy(actor core.Actor) (string, error) {
 
 // Description returns the question description
 func (lr LastResponseBody) Description() string {
-	return "asks for the last response body"
+	return "the last response body"
 }
 
 // ResponseHeader returns a specific header from the last response
@@ -97,7 +97,7 @@ func (rh ResponseHeader) AnsweredBy(actor core.Actor) (string, error) {
 
 // Description returns the question description
 func (rh ResponseHeader) Description() string {
-	return fmt.Sprintf("asks for the response header '%s'", rh.key)
+	return fmt.Sprintf("the response header '%s'", rh.key)
 }
 
 // ResponseBodyAsJSON returns the response body parsed as JSON
@@ -143,7 +143,7 @@ func (rbaj ResponseBodyAsJSON[T]) AnsweredBy(actor core.Actor) (T, error) {
 
 // Description returns the question description
 func (rbaj ResponseBodyAsJSON[T]) Description() string {
-	return "asks for the last response body as JSON"
+	return "the last response body as JSON"
 }
 
 // JSONPath represents a JSON path query on the response body
@@ -190,7 +190,7 @@ func (jp JSONPath) AnsweredBy(actor core.Actor) (any, error) {
 
 // Description returns the question description
 func (jp JSONPath) Description() string {
-	return fmt.Sprintf("asks for JSON path '%s'", jp.path)
+	return fmt.Sprintf("JSON path '%s'", jp.path)
 }
 
 // extractValue recursively extracts value from JSON data using path segments
@@ -245,7 +245,7 @@ func (rt ResponseTime) AnsweredBy(actor core.Actor) (int64, error) {
 
 // Description returns the question description
 func (rt ResponseTime) Description() string {
-	return "asks for the last request response time"
+	return "the last request response time"
 }
 
 // Convenience variables for common questions

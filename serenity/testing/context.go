@@ -5,6 +5,9 @@ package testing
 // TestContext provides an interface for test operations and logging
 // that wraps the standard testing.TB interface
 type TestContext interface {
+	// Name returns the name of the test
+	Name() string
+
 	// Logf logs a formatted message
 	Logf(format string, args ...interface{})
 

@@ -1,0 +1,5 @@
+🚀 Starting: TestReportingToFile
+  🔄 FileReporter sends GET request to /users
+  ✅ FileReporter sends GET request to /users (0.05s)
+  🔄 FileReporter ensures that the last response status code equals 200
+  ✅ FileReporter ensures that the last response status code equals 200 (0.00s)

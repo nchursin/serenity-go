@@ -6,6 +6,7 @@ import (
 
 	"github.com/nchursin/serenity-go/serenity/abilities"
 	"github.com/nchursin/serenity-go/serenity/core"
+	"github.com/nchursin/serenity-go/serenity/reporting"
 )
 
 // testActor is a wrapper around core.Actor that includes test context
@@ -13,6 +14,7 @@ type testActor struct {
 	name        string
 	abilities   []abilities.Ability
 	testContext TestContext
+	reporter    *reporting.TestRunnerAdapter
 	mutex       sync.RWMutex
 }
 
@@ -44,11 +46,24 @@ func (ta *testActor) AbilityTo(abilityType abilities.Ability) (abilities.Ability
 	return nil, fmt.Errorf("actor '%s' does not have the required ability", ta.name)
 }
 
-// AttemptsTo executes activities with error handling through test context
+// AttemptsTo executes activities with error handling through test context and reporting
 func (ta *testActor) AttemptsTo(activities ...core.Activity) {
 	for _, activity := range activities {
-		if err := activity.PerformAs(ta); err != nil {
-			switch activity.FailureMode() {
+		var tracker *reporting.ActivityTracker
+		if ta.reporter != nil {
+			tracker = reporting.NewActivityTrackerWithActor(ta.reporter.GetReporter(), activity.Description(), ta.name)
+			tracker.Start()
+		}
+
+		err := activity.PerformAs(ta)
+
+		if tracker != nil {
+			tracker.Finish(err)
+		}
+
+		if err != nil {
+			failureMode := activity.FailureMode()
+			switch failureMode {
 			case core.FailFast:
 				ta.testContext.Errorf("Critical activity error '%s' failed: %v", activity.Description(), err)
 				ta.testContext.FailNow()

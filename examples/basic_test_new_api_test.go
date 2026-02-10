@@ -29,4 +29,7 @@ func TestJSONPlaceholderBasicsNewAPI(t *testing.T) {
 		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 		ensure.That(api.LastResponseBody{}, expectations.Contains("email")),
 	)
+
+	// The console output will now show detailed step-by-step execution
+	// with emojis, timing, and activity tracking thanks to ConsoleReporter
 }

@@ -20,6 +20,12 @@ func TestIntentionalFailure(t *testing.T) {
 	// Create mock TestContext
 	mockCtx := mocks.NewMockTestContext(ctrl)
 
+	// Expect Name() to be called during test initialization
+	mockCtx.EXPECT().Name().Return("TestIntentionalFailure")
+
+	// Expect Failed() to be called during shutdown
+	mockCtx.EXPECT().Failed().Return(true)
+
 	// Expect Errorf to be called when the assertion fails
 	// We expect it to be called exactly once with any format string and arguments
 	mockCtx.EXPECT().Errorf(gomock.Any(), gomock.Any()).Times(1)
