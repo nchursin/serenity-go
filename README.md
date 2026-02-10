@@ -147,6 +147,12 @@ ensure.That(question, expectations.IsEmpty())
 ensure.That(question, expectations.ArrayLengthEquals(5))
 ensure.That(question, expectations.IsGreaterThan(10))
 ensure.That(question, expectations.ContainsKey("id"))
+
+// Custom validation with Satisfies
+ensure.That(answerable.ValueOf(value), expectations.Satisfies("custom description", func(actual T) error {
+    // Your validation logic here
+    return nil // or error with description
+}))
 ```
 
 ## API Testing
@@ -218,12 +224,15 @@ The `examples/` directory contains working examples with real APIs:
 
 - `basic_test.go` - JSONPlaceholder API testing examples including basic operations, error scenarios, and multiple actors
 - `jsonplaceholder_test.go` - Additional JSONPlaceholder API examples with CRUD operations
+- `satisfies_demo_test.go` - Comprehensive examples of custom `Satisfies` expectations including go-cmp integration
 
 Run examples:
 
 ```bash
 go test ./examples -v
 ```
+
+For detailed `Satisfies` examples, see [docs/SATISFIES_EXAMPLES.md](docs/SATISFIES_EXAMPLES.md).
 
 ## Architecture
 
@@ -266,6 +275,52 @@ customQuestion := core.Of[int]("asks for custom value", func(actor core.Actor) (
 
 ensure.That(customQuestion, expectations.Equals(42))
 ```
+
+### Custom Expectations with Satisfies
+
+Create custom expectations using the `Satisfies` function for complex validation logic:
+
+```go
+// Simple custom validation
+actor.AttemptsTo(
+    ensure.That(answerable.ValueOf(age), expectations.Satisfies("is positive number", func(actual int) error {
+        if actual <= 0 {
+            return fmt.Errorf("expected positive value, but got %d", actual)
+        }
+        return nil
+    })),
+)
+
+// Advanced struct comparison with go-cmp
+actor.AttemptsTo(
+    ensure.That(answerable.ValueOf(actualUser), expectations.Satisfies("matches expected user", func(actual User) error {
+        if diff := cmp.Diff(expectedUser, actual); diff != "" {
+            return fmt.Errorf("user mismatch:\n%s", diff)
+        }
+        return nil
+    })),
+)
+
+// Complex business logic validation
+actor.AttemptsTo(
+    ensure.That(answerable.ValueOf(order), expectations.Satisfies("has valid order data", func(actual Order) error {
+        if !strings.HasPrefix(actual.ID, "ORD-") {
+            return fmt.Errorf("order ID must start with ORD-, got %s", actual.ID)
+        }
+        if actual.Amount <= 0 {
+            return fmt.Errorf("order amount must be positive, got %f", actual.Amount)
+        }
+        // Add more validation logic...
+        return nil
+    })),
+)
+```
+
+The `Satisfies` function takes:
+- A description string that appears in test failure messages
+- A validation function that returns `nil` for success or an error for failure
+
+This enables powerful, type-safe custom validations while maintaining the Screenplay Pattern's readable test structure.
 
 ### Task Composition
 
