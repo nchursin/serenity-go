@@ -216,7 +216,7 @@ func TestDatabaseOperations(t *testing.T) {
     
     err := actor.AttemptsTo(
         // Подключаемся к базе
-        core.NewInteraction("connects to database", func(actor core.Actor) error {
+        core.Do("connects to database", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&databaseAbility{})
             return ability.(DatabaseAbility).Connect("")
         }),
@@ -249,7 +249,7 @@ func TestDatabaseOperations(t *testing.T) {
     )
     
     cleanupErr := cleanupActor.AttemptsTo(
-        core.NewInteraction("connects to database", func(actor core.Actor) error {
+        core.Do("connects to database", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&databaseAbility{})
             return ability.(DatabaseAbility).Connect("")
         }),
@@ -443,7 +443,7 @@ func TestFileSystemWithBackup(t *testing.T) {
     
     err := actor.AttemptsTo(
         // Создаем оригинальный файл
-        core.NewInteraction("creates original file", func(actor core.Actor) error {
+        core.Do("creates original file", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&fileSystemAbility{})
             return ability.(FileSystemAbility).WriteFile(
                 "important.txt", 
@@ -456,7 +456,7 @@ func TestFileSystemWithBackup(t *testing.T) {
         filesystem.BackupUpFile("important.txt"),
         
         // Модифицируем файл
-        core.NewInteraction("modifies file", func(actor core.Actor) error {
+        core.Do("modifies file", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&fileSystemAbility{})
             return ability.(FileSystemAbility).WriteFile(
                 "important.txt", 
@@ -671,19 +671,19 @@ func TestWebSocketChat(t *testing.T) {
     
     err := actor.AttemptsTo(
         // Подключаемся к WebSocket
-        core.NewInteraction("connects to websocket", func(actor core.Actor) error {
+        core.Do("connects to websocket", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&webSocketAbility{})
             return ability.(WebSocketAbility).Connect(wsURL, nil)
         }),
         
         // Отправляем сообщение
-        core.NewInteraction("sends message", func(actor core.Actor) error {
+        core.Do("sends message", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&webSocketAbility{})
             return ability.(WebSocketAbility).Send([]byte("Hello WebSocket!"))
         }),
         
         // Получаем ответ
-        core.NewInteraction("receives response", func(actor core.Actor) error {
+        core.Do("receives response", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&webSocketAbility{})
             _, err := ability.(WebSocketAbility).Receive(5 * time.Second)
             return err
@@ -751,7 +751,7 @@ func TestRedisOperations(t *testing.T) {
     
     err := actor.AttemptsTo(
         // Подключаемся к Redis
-        core.NewInteraction("connects to redis", func(actor core.Actor) error {
+        core.Do("connects to redis", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&redisAbility{})
             return ability.(RedisAbility).Connect("", &redis.Options{
                 Addr: "localhost:6379",
@@ -759,13 +759,13 @@ func TestRedisOperations(t *testing.T) {
         }),
         
         // Устанавливаем значение
-        core.NewInteraction("sets key-value", func(actor core.Actor) error {
+        core.Do("sets key-value", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&redisAbility{})
             return ability.(RedisAbility).Set("test:key", "test-value", 0)
         }),
         
         // Получаем значение
-        core.NewInteraction("gets value", func(actor core.Actor) error {
+        core.Do("gets value", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&redisAbility{})
             val, err := ability.(RedisAbility).Get("test:key")
             if err != nil {
@@ -780,7 +780,7 @@ func TestRedisOperations(t *testing.T) {
         ensure.That(redis.StringValue("test:key"), expectations.Equals("test-value")),
         
         // Удаляем ключ
-        core.NewInteraction("deletes key", func(actor core.Actor) error {
+        core.Do("deletes key", func(actor core.Actor) error {
             ability, _ := actor.AbilityTo(&redisAbility{})
             return ability.(RedisAbility).Del("test:key")
         }),

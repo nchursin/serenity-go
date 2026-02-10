@@ -109,7 +109,7 @@ api.SendDeleteRequest("/posts/123")
 // Define reusable task
 createUserTask := core.Where(
     "creates a new user",
-    core.NewInteraction("creates a new user", func(a core.Actor) error {
+    core.Do("creates a new user", func(a core.Actor) error {
         req, err := api.Post("/users").
             With(userData).
             Build()
@@ -248,7 +248,7 @@ go test ./examples -v
 ### Custom Interactions
 
 ```go
-customInteraction := core.NewInteraction("performs custom action", func(actor core.Actor) error {
+customInteraction := core.Do("performs custom action", func(actor core.Actor) error {
     // Your custom logic here
     return nil
 })

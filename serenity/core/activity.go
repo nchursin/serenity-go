@@ -51,8 +51,8 @@ type interaction struct {
 	perform     func(actor Actor) error
 }
 
-// NewInteraction creates a new interaction with the given description and perform function
-func NewInteraction(description string, perform func(actor Actor) error) Interaction {
+// Do creates a new interaction with the given description and perform function
+func Do(description string, perform func(actor Actor) error) Interaction {
 	return &interaction{
 		description: description,
 		perform:     perform,
