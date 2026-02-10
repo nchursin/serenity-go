@@ -174,14 +174,6 @@ func (cr *ConsoleReporter) writeWithoutNewline(format string, args ...interface{
 	}
 }
 
-// clearLine clears the current line and moves cursor to beginning
-func (cr *ConsoleReporter) clearLine() {
-	if cr.output != nil {
-		// Move cursor to beginning of line
-		_, _ = fmt.Fprintf(cr.output, "\r")
-	}
-}
-
 // writeOverLine clears the current line and writes new content
 func (cr *ConsoleReporter) writeOverLine(format string, args ...interface{}) {
 	if cr.output != nil {
