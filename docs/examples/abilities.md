@@ -210,7 +210,10 @@ func (i *InsertDataActivity) PerformAs(actor core.Actor) error {
 
 ```go
 func TestDatabaseOperations(t *testing.T) {
-    actor := core.NewActor("DBAdmin").WhoCan(
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
+    actor := test.ActorCalled("DBAdmin").WhoCan(
         database.ConnectToPostgreSQL("postgres://user:pass@localhost/testdb?sslmode=disable"),
     )
     
@@ -244,7 +247,7 @@ func TestDatabaseOperations(t *testing.T) {
     require.NoError(t, err)
     
     // Очистка
-    cleanupActor := core.NewActor("DBCleaner").WhoCan(
+    cleanupActor := test.ActorCalled("DBCleaner").WhoCan(
         database.ConnectToPostgreSQL("postgres://user:pass@localhost/testdb?sslmode=disable"),
     )
     
@@ -432,9 +435,12 @@ func copyFile(src, dst string) error {
 
 ```go
 func TestFileSystemWithBackup(t *testing.T) {
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
     tempDir := t.TempDir()
     
-    actor := core.NewActor("FileEditor").WhoCan(
+    actor := test.ActorCalled("FileEditor").WhoCan(
         filesystem.ManageFileSystemIn(tempDir),
     )
     
@@ -665,7 +671,7 @@ func TestWebSocketChat(t *testing.T) {
     // Конвертируем HTTP URL в WebSocket URL
     wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
     
-    actor := core.NewActor("WebSocketClient").WhoCan(
+    actor := test.ActorCalled("WebSocketClient").WhoCan(
         websocket.ConnectToWebSocket(),
     )
     
@@ -744,8 +750,11 @@ type RedisAbility interface {
 
 ```go
 func TestRedisOperations(t *testing.T) {
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
     // Предполагаем, что у вас запущен Redis на localhost:6379
-    actor := core.NewActor("RedisUser").WhoCan(
+    actor := test.ActorCalled("RedisUser").WhoCan(
         redis.ConnectToRedis("localhost:6379"),
     )
     
