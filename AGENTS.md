@@ -298,6 +298,7 @@ serenity-go/
 - Examples directory is excluded from most linting rules
 - Mock files should be regenerated when interface definitions change
 - Use `go generate` or `make mocks` to regenerate all mocks at once
+- Use convetional commit messages when asked to commit changes
 
 ## Dependencies
 
