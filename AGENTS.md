@@ -228,13 +228,16 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 Example (Legacy with require):
 ```go
 func TestJSONPlaceholderBasics(t *testing.T) {
-    actor := core.NewActor("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
+    actor := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
     err := actor.AttemptsTo(
         api.SendGetRequest("/posts"),
         ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
     )
-    require.NoError(t, err)
+    require.NoError(t, err)  // Still needed for legacy mode
 }
 ```
 
