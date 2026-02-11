@@ -10,14 +10,6 @@ type task struct {
 	activities  []Activity
 }
 
-// NewTask creates a new task with the given description and activities
-func NewTask(description string, activities ...Activity) Task {
-	return &task{
-		description: description,
-		activities:  activities,
-	}
-}
-
 // Description returns the task description
 func (t *task) Description() string {
 	return t.description
@@ -39,10 +31,12 @@ func (t *task) FailureMode() FailureMode {
 	return FailFast
 }
 
-// Where creates a new task with the given description and activities
-// This is a convenience function similar to Serenity/JS Task.where
-func Where(description string, activities ...Activity) Task {
-	return NewTask(description, activities...)
+// TaskWhere creates a new task with the given description and activities
+func TaskWhere(description string, activities ...Activity) Task {
+	return &task{
+		description: description,
+		activities:  activities,
+	}
 }
 
 // interaction implements the Interaction interface
