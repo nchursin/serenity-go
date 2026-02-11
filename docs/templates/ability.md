@@ -458,7 +458,10 @@ func TestYourAbility_DoSomething(t *testing.T) {
 // ====================
 
 func TestYourAbility_WithActor_BasicUsage(t *testing.T) {
-    actor := core.NewActor("TestUser").WhoCan(
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
+    actor := test.ActorCalled("TestUser").WhoCan(
         NewYourAbility(),
     )
     
@@ -479,7 +482,10 @@ func TestYourAbility_WithActor_BasicUsage(t *testing.T) {
 // ====================
 
 func TestYourAbility_ErrorScenarios(t *testing.T) {
-    actor := core.NewActor("ErrorTester").WhoCan(
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
+    actor := test.ActorCalled("ErrorTester").WhoCan(
         NewYourAbility(),
     )
     
