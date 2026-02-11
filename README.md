@@ -29,17 +29,20 @@ package main
 
 import (
     "testing"
-    "github.com/stretchr/testify/require"
 
     "github.com/nchursin/serenity-go/serenity/abilities/api"
     "github.com/nchursin/serenity-go/serenity/core"
     "github.com/nchursin/serenity-go/serenity/expectations"
     "github.com/nchursin/serenity-go/serenity/expectations/ensure"
+    serenity "github.com/nchursin/serenity-go/serenity/testing"
 )
 
 func TestAPI(t *testing.T) {
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
     // Create an actor with API ability
-    actor := core.NewActor("APITester").WhoCan(
+    actor := test.ActorCalled("APITester").WhoCan(
         api.CallAnApiAt("https://jsonplaceholder.typicode.com"),
     )
 
@@ -51,14 +54,12 @@ func TestAPI(t *testing.T) {
     }
 
     // Test the API
-    err := actor.AttemptsTo(
+    actor.AttemptsTo(
         api.SendPostRequest("/posts").
             WithBody(newPost),
         ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
         ensure.That(api.LastResponseBody{}, expectations.Contains("Test Post")),
     )
-
-    require.NoError(t, err)
 }
 ```
 
@@ -69,8 +70,11 @@ func TestAPI(t *testing.T) {
 Actors represent people or systems interacting with your application:
 
 ```go
+test := serenity.NewSerenityTest(t)
+defer test.Shutdown()
+
 // Create an actor
-actor := core.NewActor("John Doe")
+actor := test.ActorCalled("John Doe")
 
 // Give the actor abilities to interact with your system
 actor = actor.WhoCan(api.CallAnApiAt("https://api.example.com"))
@@ -81,11 +85,14 @@ actor = actor.WhoCan(api.CallAnApiAt("https://api.example.com"))
 Abilities enable actors to interact with different interfaces:
 
 ```go
+test := serenity.NewSerenityTest(t)
+defer test.Shutdown()
+
 // HTTP API ability
 apiAbility := api.CallAnApiAt("https://api.example.com")
 
 // Actor with multiple abilities
-actor := core.NewActor("TestUser").WhoCan(
+actor := test.ActorCalled("TestUser").WhoCan(
     apiAbility,
     // ... other abilities
 )
@@ -441,14 +448,17 @@ actor.AttemptsTo(
 ### Multiple Actors
 
 ```go
-admin := core.NewActor("Admin").WhoCan(api.UsingURL(baseURL))
-user := core.NewActor("RegularUser").WhoCan(api.UsingURL(baseURL))
+test := serenity.NewSerenityTest(t)
+defer test.Shutdown()
+
+admin := test.ActorCalled("Admin").WhoCan(api.UsingURL(baseURL))
+user := test.ActorCalled("RegularUser").WhoCan(api.UsingURL(baseURL))
 
 // Admin creates resources
-err := admin.AttemptsTo(createResourceTask)
+admin.AttemptsTo(createResourceTask)
 
 // User interacts with resources
-err = user.AttemptsTo(accessResourceTask)
+user.AttemptsTo(accessResourceTask)
 ```
 
 ## Comparison with Serenity/JS
@@ -457,7 +467,7 @@ This Go implementation follows the same design principles as Serenity/JS:
 
 | Serenity/JS | Serenity-Go |
 |--------------|-------------|
-| `actorCalled('John')` | `core.NewActor("John")` |
+| `actorCalled('John')` | `test.ActorCalled("John")` |
 | `WhoCan(CallAnAPI.using(...))` | `WhoCan(api.CallAnApiAt(...))` |
 | `attemptsTo(Send.a(...))` | `AttemptsTo(api.SendGetRequest(...))` |
 | `Ensure.that(LastResponse.status(), equals(200))` | `ensure.That(api.LastResponseStatus{}, expectations.Equals(200))` |
