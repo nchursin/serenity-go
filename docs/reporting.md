@@ -208,7 +208,10 @@ ConsoleReporter потокобезопасен и может использов�
 
 ```go
 func TestOldStyle(t *testing.T) {
-    actor := core.NewActor("Tester").WhoCan(api.CallAnApiAt("https://api.example.com"))
+    test := serenity.NewSerenityTest(t)
+    defer test.Shutdown()
+
+    actor := test.ActorCalled("Tester").WhoCan(api.CallAnApiAt("https://api.example.com"))
 
     err := actor.AttemptsTo(
         api.SendGetRequest("/users"),
