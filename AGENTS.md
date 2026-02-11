@@ -99,7 +99,7 @@ import (
 
     "github.com/stretchr/testify/require"
     "go.uber.org/mock/gomock"
-    
+
     "github.com/nchursin/serenity-go/serenity/core"
     "github.com/nchursin/serenity-go/serenity/abilities/api"
     "github.com/nchursin/serenity-go/serenity/testing"
@@ -195,7 +195,7 @@ Example:
 func (a *actor) WhoCan(abilities ...Ability) Actor {
     a.mutex.Lock()
     defer a.mutex.Unlock()
-    
+
     a.abilities = append(a.abilities, abilities...)
     return a
 }
@@ -245,12 +245,6 @@ func TestJSONPlaceholderBasics(t *testing.T) {
 - **Formatters**: gofmt, goimports with local prefix `github.com/nchursin/serenity-go`
 - **Mock files**: Generated with `go generate` using gomock
 
-### Documentation
-- Include package-level documentation explaining the purpose
-- Document public types and functions with clear examples
-- Use godoc format for comments
-- Include context and error information in function documentation
-
 ## Project Structure
 
 ```
@@ -282,41 +276,10 @@ serenity-go/
 └── README.md             # Project documentation
 ```
 
-## Screenplay Pattern Guidelines
-
-### Actor-Based Testing
-- Tests should describe what actors do, not how they do it
-- Create actors with descriptive names (e.g., "APITester", "Admin", "RegularUser")
-- Give actors only the abilities they need for their role
-- Use TestContext.ActorCalled() for new tests, core.NewActor() for legacy tests
-
-### Activity Composition
-- Use interactions for low-level operations (HTTP requests, database queries)
-- Create tasks for high-level business actions
-- Build complex workflows by composing simple activities
-
-### Question-Answer Pattern
-- Use questions to retrieve information from the system
-- Chain questions with assertions for validation
-- Keep questions focused on single pieces of information
-
-## Mock Generation and Testing
-
-### Using Gomock
-- Generate mocks with `make mocks` or `go generate ./...`
-- Mock files are created in `mocks/` subdirectories
-- Use mock interfaces for testing complex interactions
-- Clean generated mocks with `make mocks-clean`
-
-Example:
-```go
-//go:generate mockgen -source=interfaces.go -destination=mocks/mock_actor.go -package=mocks
-```
-
 ## Development Workflow
 
 1. **Setup**: Run `make deps` to ensure dependencies are current
-2. **Development**: Use `make fmt` and `make lint` frequently during coding
+2. **Development**: Use `make fmt` and `make lint` frequently during coding. **Always** use TDD approach.
 3. **Testing**: Run `make test-v` for verbose output during development
 4. **Pre-commit**: Run `make check` (fmt-check, lint, test) before committing
 5. **CI**: Use `make ci` for automated pipeline (fmt, lint, test)
@@ -336,88 +299,11 @@ Example:
 - Mock files should be regenerated when interface definitions change
 - Use `go generate` or `make mocks` to regenerate all mocks at once
 
-## API Testing Specifics
-
-### Request Building
-- Use RequestBuilder for fluent HTTP request construction
-- Methods: `WithHeader()`, `WithHeaders()`, `WithBody()`, `WithJSONBody()`
-- Automatic JSON marshaling for interface{} data
-- Call `Build()` to create the final http.Request
-
-### Common Activities
-- `api.SendGetRequest(path)`
-- `api.SendPostRequest(path).With(data)`
-- `api.SendRequest(method, path).WithHeader(key, value).With(data)`
-- `ensure.That(question, expectation)` for assertions
-
-### Questions
-- `api.LastResponseStatus{}` - get HTTP status code
-- `api.LastResponseBody{}` - get response body as string
-- `api.LastResponseHeaders{}` - get response headers
-
-## Git Configuration
-
-- **Branch**: Work in `feature` or development branches
-- **Commit messages**: Follow conventional commits format
-- **Language**: Russian responses, English commit messages (as per general instructions)
-- **Pre-commit hooks**: Consider using `make check` as pre-commit validation
-
-## Release Process
-
-### Automated Releases
-- Releases are automatically created on pushes to main/master
-- Uses semantic versioning based on conventional commits
-- CHANGELOG.md is automatically generated from commit messages using `cliff.toml`
-- GitHub releases are created with release notes containing only current version changes (using `cliff-github.toml`)
-- Full changelog is maintained in CHANGELOG.md, GitHub releases show version-specific changes
-
-### Manual Release Process
-```bash
-# Preview next release
-./scripts/release.sh preview
-
-# Prepare release (runs tests, generates changelog)
-./scripts/release.sh prepare
-
-# Create release (commits changelog, triggers GitHub Actions)
-./scripts/release.sh release
-
-# Or use Makefile commands
-make release-dry    # Preview changelog
-make release-prepare # Prepare release
-make release        # Create release
-```
-
-### Versioning Rules
-- **feat**: MINOR version increment (0.1.0 → 0.2.0)
-- **fix**: PATCH version increment (0.1.0 → 0.1.1)
-- **BREAKING CHANGE**: MAJOR version increment (0.1.0 → 1.0.0)
-- Other types (docs, style, refactor, test, chore): No version increment
-
-### Release Checklist
-- [ ] All tests passing (`make test`)
-- [ ] Code linted successfully (`make lint`)
-- [ ] CHANGELOG.md updated automatically
-- [ ] Version tag created and pushed
-- [ ] GitHub release published automatically
-
-### Local Release Tools
-Install required tools for local testing:
-```bash
-# Install git-cliff (macOS)
-curl -L https://github.com/orhun/git-cliff/releases/download/v2.2.2/git-cliff-2.2.2-x86_64-apple-darwin.tar.gz | tar -xz
-sudo mv git-cliff-2.2.2-x86_64-apple-darwin/git-cliff /usr/local/bin/
-
-# For more details, see docs/RELEASING.md
-```
-
 ## Dependencies
 
 - **Go**: Version 1.23.4
 - **Testify**: v1.11.1 for assertions and test utilities
 - **Gomock**: v0.6.0 for interface mocking
 - **Golangci-lint**: For code quality and formatting enforcement
-- **git-cliff**: For automated changelog generation (installed locally)
-- **semantic-release**: For automated versioning (GitHub Actions)
 
 Ensure all dependencies are up to date with `make deps` before development.
