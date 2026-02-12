@@ -83,3 +83,44 @@ type TestContext interface {
 	// Failed returns true if the test has already failed
 	Failed() bool
 }
+
+// Advanced Usage Examples:
+//
+// Concurrent Testing:
+//
+//	test := serenity.NewSerenityTest(t)
+//	defer test.Shutdown()
+//
+//	var wg sync.WaitGroup
+//	actor := test.ActorCalled("ConcurrentUser").WhoCan(api.CallAnApiAt(apiURL))
+//
+//	for i := 0; i < 5; i++ {
+//		wg.Add(1)
+//		go func(id int) {
+//			defer wg.Done()
+//			actor.AttemptsTo(
+//				api.SendGetRequest(fmt.Sprintf("/items/%d", id)),
+//				ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+//			)
+//		}(i)
+//	}
+//	wg.Wait()
+//
+// Error Scenarios:
+//
+//	test := serenity.NewSerenityTest(t)
+//	defer test.Shutdown()
+//
+//	actor := test.ActorCalled("ErrorProneUser").WhoCan(api.CallAnApiAt("https://invalid.example.com"))
+//
+//	// This will automatically fail the test with a descriptive error
+//	actor.AttemptsTo(api.SendGetRequest("/endpoint"))
+//
+// Custom Reporters:
+//
+//	reporter := &customReporter{output: os.Stdout}
+//	test := serenity.NewSerenityTestWithReporter(t, reporter)
+//	defer test.Shutdown()
+//
+//	actor := test.ActorCalled("ReportedUser").WhoCan(api.CallAnApiAt(apiURL))
+//	actor.AttemptsTo(api.SendGetRequest("/users"))
