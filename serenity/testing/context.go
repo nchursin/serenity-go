@@ -61,8 +61,12 @@ package testing
 
 //go:generate mockgen -source=context.go -destination=mocks/mock_test_context.go -package=mocks
 
-// TestContext provides an interface for test operations and logging
-// that wraps the standard testing.TB interface
+// TestContext provides a testing.TB wrapper for automatic error handling.
+// This interface enables the TestContext API where test failures are automatically
+// handled without the need for manual error checking.
+//
+// Methods automatically call t.Helper() and t.Fatalf() on errors,
+// eliminating the need for require.NoError() calls in test code.
 type TestContext interface {
 	// Name returns the name of the test
 	Name() string
