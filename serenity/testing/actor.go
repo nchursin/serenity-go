@@ -9,13 +9,21 @@ import (
 	"github.com/nchursin/serenity-go/serenity/reporting"
 )
 
-// testActor is a wrapper around core.Actor that includes test context
+// testActor implements the Actor interface with TestContext integration.
+// This actor automatically handles errors through the embedded TestContext,
+// providing a seamless testing experience without manual error checking.
+//
+// Key Features:
+//   - Automatic error propagation to test framework
+//   - Thread-safe operations
+//   - Integrated reporting capabilities
+//   - Support for all standard Actor methods
 type testActor struct {
-	name        string
-	abilities   []abilities.Ability
-	testContext TestContext
-	reporter    *reporting.TestRunnerAdapter
-	mutex       sync.RWMutex
+	name        string                       // Actor name for reporting
+	abilities   []abilities.Ability          // Actor abilities
+	testContext TestContext                  // Embedded test context for error handling
+	reporter    *reporting.TestRunnerAdapter // Integrated reporter for activity tracking
+	mutex       sync.RWMutex                 // Mutex for thread-safe operations
 }
 
 // Name returns the actor's name
@@ -23,7 +31,22 @@ func (ta *testActor) Name() string {
 	return ta.name
 }
 
-// WhoCan adds abilities to the actor
+// WhoCan adds abilities to the actor and returns the same actor instance for chaining.
+// This method is thread-safe and can be called multiple times.
+//
+// Example:
+//
+//	actor := test.ActorCalled("APIUser").
+//		WhoCan(api.CallAnApiAt("https://api.example.com")).
+//		WhoCan(db.ConnectToDatabase("postgres://localhost/test"))
+//
+// Parameters:
+//
+//	abilities - List of abilities to add to the actor
+//
+// Returns:
+//
+//	The same actor instance with added abilities for method chaining
 func (ta *testActor) WhoCan(abilities ...abilities.Ability) core.Actor {
 	ta.mutex.Lock()
 	defer ta.mutex.Unlock()
@@ -46,7 +69,33 @@ func (ta *testActor) AbilityTo(abilityType abilities.Ability) (abilities.Ability
 	return nil, fmt.Errorf("actor '%s' does not have the required ability", ta.name)
 }
 
-// AttemptsTo executes activities with error handling through test context and reporting
+// AttemptsTo executes activities and automatically handles any errors through TestContext.
+// Unlike the legacy API, no manual error checking is required - failures automatically
+// fail the test with descriptive error messages.
+//
+// Example:
+//
+//	// TestContext API - automatic error handling
+//	actor.AttemptsTo(
+//		api.SendGetRequest("/users"),
+//		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+//	)
+//
+//	// Legacy API comparison
+//	err := legacyActor.AttemptsTo(
+//		api.SendGetRequest("/users"),
+//		ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+//	)
+//	require.NoError(t, err) // Manual error handling required
+//
+// Parameters:
+//
+//	activities - List of activities to execute in order
+//
+// This method automatically handles different failure modes:
+//   - FailFast: Stops test execution immediately on error
+//   - ErrorButContinue: Logs error but continues with remaining activities
+//   - Ignore: Silently ignores the error and continues
 func (ta *testActor) AttemptsTo(activities ...core.Activity) {
 	for _, activity := range activities {
 		var tracker *reporting.ActivityTracker
