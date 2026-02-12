@@ -17,17 +17,81 @@ type ReporterProvider interface {
 	GetReporterAdapter() *reporting.TestRunnerAdapter
 }
 
-// SerenityTest provides a test context and manages actors for a test
+// SerenityTest manages the lifecycle of test actors and provides the TestContext API.
+// This interface serves as the main entry point for using the simplified testing approach.
+//
+// Lifecycle Management:
+//  1. Create test instance with NewSerenityTest() or NewSerenityTestWithReporter()
+//  2. Create actors using ActorCalled()
+//  3. Execute test activities
+//  4. Call Shutdown() to clean up resources (typically via defer)
+//
+// Thread Safety:
+//
+//	All SerenityTest methods are thread-safe. Multiple goroutines can safely
+//	create and use actors from the same test instance.
 type SerenityTest interface {
-	// ActorCalled returns an actor with the given name, creating it if necessary
+	// TestContext returns the embedded testing.TB interface.
+	// This method provides access to the underlying testing framework.
+	TestContext() TestContext
+
+	// ActorCalled creates a new test-aware actor with the specified name.
+	// The actor is automatically configured with TestContext error handling.
+	//
+	// Parameters:
+	//	name - Human-readable name for the actor (used in reporting)
+	//
+	// Returns:
+	//	An Actor instance configured for automatic error handling
 	ActorCalled(name string) core.Actor
 
-	// Shutdown cleans up resources and should be called with defer
+	// Shutdown cleans up resources and finalizes the test.
+	// This method should be called via defer after creating the test instance.
+	// Failure to call Shutdown() may result in resource leaks.
+	//
+	// Example:
+	//	test := serenity.NewSerenityTest(t)
+	//	defer test.Shutdown() // Ensure cleanup
+	//
+	// Side effects:
+	//	- Flushes any pending reports
+	//	- Cleans up actor resources
+	//	- Finalizes test metrics
 	Shutdown()
 
 	// GetReporterAdapter returns the test runner adapter for reporting
 	GetReporterAdapter() *reporting.TestRunnerAdapter
 }
+
+// Test Lifecycle Examples:
+//
+// Basic Test Structure:
+//
+//	func TestAPIEndpoints(t *testing.T) {
+//		test := serenity.NewSerenityTest(t)
+//		defer test.Shutdown()
+//
+//		actor := test.ActorCalled("APITester").WhoCan(
+//			api.CallAnApiAt("https://jsonplaceholder.typicode.com"),
+//		)
+//
+//		actor.AttemptsTo(
+//			api.SendGetRequest("/posts"),
+//			ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+//			ensure.That(api.LastResponseBody{}, expectations.Contains("title")),
+//		)
+//	}
+//
+// Test with Custom Reporter:
+//
+//	func TestWithCustomReporting(t *testing.T) {
+//		reporter := custom.NewJSONReporter()
+//		test := serenity.NewSerenityTestWithReporter(t, reporter)
+//		defer test.Shutdown()
+//
+//		actor := test.ActorCalled("ReportedUser").WhoCan(api.CallAnApiAt(apiURL))
+//		actor.AttemptsTo(api.SendGetRequest("/health"))
+//	}
 
 // testResult implements the TestResult interface
 type testResult struct {
@@ -123,6 +187,12 @@ func (st *serenityTest) ActorCalled(name string) core.Actor {
 
 	st.actors[name] = actor
 	return actor
+}
+
+// TestContext returns the embedded testing.TB interface.
+// This method provides access to the underlying testing framework.
+func (st *serenityTest) TestContext() TestContext {
+	return st.ctx
 }
 
 // GetReporterAdapter returns the test runner adapter for reporting
