@@ -117,8 +117,8 @@ api.SendDeleteRequest("/posts/123")
 createUserTask := core.Where(
     "creates a new user",
     core.Do("creates a new user", func(a core.Actor) error {
-        req, err := api.Post("/users").
-            With(userData).
+        req, err := api.NewRequestBuilder("POST", "/users").
+            WithJSONBody(userData).
             Build()
         if err != nil {
             return err
@@ -137,10 +137,40 @@ actor.AttemptsTo(createUserTask)
 Questions retrieve information from the system:
 
 ```go
-// Built-in questions
+// Basic built-in questions
 ensure.That(api.LastResponseStatus{}, expectations.Equals(200))
 ensure.That(api.LastResponseBody{}, expectations.Contains("success"))
 ensure.That(api.NewResponseHeader("content-type"), expectations.Contains("json"))
+
+// Advanced questions with JSON parsing
+type User struct {
+    ID    int    `json:"id"`
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+err := actor.AttemptsTo(
+    api.SendGetRequest("/users/1"),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+    
+    // Parse response as JSON struct
+    ensure.That(api.NewResponseBodyAsJSON[User](), expectations.Satisfies("has valid user", func(actual User) error {
+        if actual.Name == "" {
+            return fmt.Errorf("user name is empty")
+        }
+        if !strings.Contains(actual.Email, "@") {
+            return fmt.Errorf("invalid email format")
+        }
+        return nil
+    })),
+    
+    // JSONPath queries
+    ensure.That(api.NewJSONPath("name"), expectations.Contains("John")),
+    ensure.That(api.NewJSONPath("data.users.*.email"), expectations.Contains("@")),
+    
+    // Response time validation
+    ensure.That(api.ResponseTime{}, expectations.IsLessThan(1000)), // milliseconds
+)
 ```
 
 ### Assertions
@@ -186,10 +216,22 @@ err = actor.AttemptsTo(
     ensure.That(api.LastResponseStatus{}, expectations.Equals(201)),
 )
 
-// PUT request with headers
+// PUT request with single header
 err = actor.AttemptsTo(
     api.SendPutRequest("/posts/1").
         WithHeader("Authorization", "Bearer token").
+        WithBody(updatedData),
+    ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
+)
+
+// PUT request with multiple headers
+err = actor.AttemptsTo(
+    api.SendPutRequest("/posts/1").
+        WithHeaders(map[string]string{
+            "Content-Type": "application/json",
+            "Authorization": "Bearer token",
+            "X-Custom-Header": "custom-value",
+        }).
         WithBody(updatedData),
     ensure.That(api.LastResponseStatus{}, expectations.Equals(200)),
 )
@@ -451,8 +493,8 @@ actor.AttemptsTo(
 test := serenity.NewSerenityTest(t)
 defer test.Shutdown()
 
-admin := test.ActorCalled("Admin").WhoCan(api.UsingURL(baseURL))
-user := test.ActorCalled("RegularUser").WhoCan(api.UsingURL(baseURL))
+admin := test.ActorCalled("Admin").WhoCan(api.CallAnApiAt(baseURL))
+user := test.ActorCalled("RegularUser").WhoCan(api.CallAnApiAt(baseURL))
 
 // Admin creates resources
 admin.AttemptsTo(createResourceTask)

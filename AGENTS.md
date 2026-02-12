@@ -161,7 +161,7 @@ if err := someOperation(); err != nil {
 Example:
 ```go
 // Fluent request building
-req, err := api.Post("/posts").
+req, err := api.NewRequestBuilder("POST", "/posts").
     WithHeader("Content-Type", "application/json").
     WithHeader("Authorization", "Bearer token").
     With(postData).
