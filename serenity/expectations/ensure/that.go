@@ -1,6 +1,7 @@
 package ensure
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/nchursin/serenity-go/serenity/core"
@@ -38,8 +39,8 @@ func (e *EnsureActivity[T]) Description() string {
 }
 
 // PerformAs executes the ensure activity
-func (e *EnsureActivity[T]) PerformAs(actor core.Actor) error {
-	actual, err := e.question.AnsweredBy(actor)
+func (e *EnsureActivity[T]) PerformAs(actor core.Actor, ctx context.Context) error {
+	actual, err := e.question.AnsweredBy(actor, ctx)
 	if err != nil {
 		return fmt.Errorf("failed to answer question '%s': %w", e.question.Description(), err)
 	}

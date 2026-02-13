@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -63,7 +64,7 @@ type question[T any] struct {
 	description string
 
 	// ask is the function that executes when the question is answered
-	ask func(actor Actor) (T, error)
+	ask func(actor Actor, ctx context.Context) (T, error)
 }
 
 // NewQuestion creates a new question with the given description and ask function.
@@ -75,7 +76,7 @@ type question[T any] struct {
 //
 // Parameters:
 //   - description: Human-readable description of what the question asks
-//   - ask: Function that takes an actor and returns the typed answer
+//   - ask: Function that takes an actor and context, returns the typed answer
 //
 // Returns:
 //   - Question[T]: A new question that returns type T when answered
@@ -139,7 +140,7 @@ type question[T any] struct {
 //		ensure.That(userCount, expectations.GreaterThan(0)),
 //		ensure.That(isSystemOnline, expectations.IsTrue()),
 //	)
-func NewQuestion[T any](description string, ask func(actor Actor) (T, error)) Question[T] {
+func NewQuestion[T any](description string, ask func(actor Actor, ctx context.Context) (T, error)) Question[T] {
 	return &question[T]{
 		description: description,
 		ask:         ask,
@@ -165,6 +166,7 @@ func (q *question[T]) Description() string {
 //
 // Parameters:
 //   - actor: The actor asking the question
+//   - ctx: Context for cancellation and timeout
 //
 // Returns:
 //   - T: The typed answer to the question
@@ -172,19 +174,19 @@ func (q *question[T]) Description() string {
 //
 // Example:
 //
-//	func (q *userCountQuestion) AnsweredBy(actor core.Actor) (int, error) {
-//		return q.ask(actor)
+//	func (q *userCountQuestion) AnsweredBy(actor core.Actor, ctx context.Context) (int, error) {
+//		return q.ask(actor, ctx)
 //	}
 //
 // Usage:
 //
-//	count, err := question.AnsweredBy(actor)
+//	count, err := question.AnsweredBy(actor, ctx)
 //	if err != nil {
 //		return fmt.Errorf("failed to answer question '%s': %w", question.Description(), err)
 //	}
 //	fmt.Printf("Answer: %v\n", count)
-func (q *question[T]) AnsweredBy(actor Actor) (T, error) {
-	return q.ask(actor)
+func (q *question[T]) AnsweredBy(actor Actor, ctx context.Context) (T, error) {
+	return q.ask(actor, ctx)
 }
 
 // Of creates a new question with the given description and ask function.
@@ -252,6 +254,6 @@ func (q *question[T]) AnsweredBy(actor Actor) (T, error) {
 //
 //	// Both create the same type of question
 //	var q1, q2 core.Question[int]
-func Of[T any](description string, ask func(actor Actor) (T, error)) Question[T] {
+func Of[T any](description string, ask func(actor Actor, ctx context.Context) (T, error)) Question[T] {
 	return NewQuestion(description, ask)
 }

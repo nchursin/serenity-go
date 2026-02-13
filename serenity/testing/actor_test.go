@@ -1,6 +1,7 @@
 package testing
 
 import (
+	"context"
 	"testing"
 
 	"go.uber.org/mock/gomock"
@@ -29,8 +30,10 @@ func TestTestActorAttemptsToWithReporting(t *testing.T) {
 
 	// Create test actor with mock reporter
 	adapter := reporting.NewTestRunnerAdapter(mockReporter)
+	testCtx := context.Background()
 	test := &serenityTest{
-		ctx:     mockTestContext,
+		testCtx: mockTestContext,
+		ctx:     testCtx,
 		actors:  make(map[string]core.Actor),
 		adapter: adapter,
 	}
@@ -39,7 +42,7 @@ func TestTestActorAttemptsToWithReporting(t *testing.T) {
 
 	// Create mock activity
 	mockActivity := coreMocks.NewMockActivity(ctrl)
-	mockActivity.EXPECT().PerformAs(gomock.Any()).Return(nil).Times(1)
+	mockActivity.EXPECT().PerformAs(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 	mockActivity.EXPECT().Description().Return("Send GET request to /posts").Times(1)
 	mockActivity.EXPECT().FailureMode().Return(core.FailFast).AnyTimes()
 

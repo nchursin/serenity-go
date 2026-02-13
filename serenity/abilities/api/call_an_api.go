@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -13,7 +14,7 @@ import (
 type CallAnAPI interface {
 	abilities.Ability
 	// SendRequest sends an HTTP request and stores the response
-	SendRequest(req *http.Request) (*http.Response, error)
+	SendRequest(req *http.Request, ctx context.Context) (*http.Response, error)
 	// LastResponse returns the most recent response
 	LastResponse() *http.Response
 	// SetBaseURL sets the base URL for subsequent requests
@@ -48,7 +49,7 @@ func CallAnApiAt(baseURL string) CallAnAPI {
 }
 
 // SendRequest sends an HTTP request and stores the response
-func (c *callAnAPI) SendRequest(req *http.Request) (*http.Response, error) {
+func (c *callAnAPI) SendRequest(req *http.Request, ctx context.Context) (*http.Response, error) {
 	// Apply base URL if request URL is relative
 	c.mutex.RLock()
 	baseURL := c.baseURL
@@ -62,6 +63,8 @@ func (c *callAnAPI) SendRequest(req *http.Request) (*http.Response, error) {
 
 		req.URL = parsedBaseURL.ResolveReference(req.URL)
 	}
+
+	req = req.WithContext(ctx)
 
 	resp, err := c.client.Do(req)
 	if err != nil {

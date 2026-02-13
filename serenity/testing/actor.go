@@ -1,6 +1,7 @@
 package testing
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -23,12 +24,18 @@ type testActor struct {
 	abilities   []abilities.Ability          // Actor abilities
 	testContext TestContext                  // Embedded test context for error handling
 	reporter    *reporting.TestRunnerAdapter // Integrated reporter for activity tracking
+	ctx         context.Context              // Context for cancellation and timeout
 	mutex       sync.RWMutex                 // Mutex for thread-safe operations
 }
 
 // Name returns the actor's name
 func (ta *testActor) Name() string {
 	return ta.name
+}
+
+// Context returns the actor's context for cancellation and timeout
+func (ta *testActor) Context() context.Context {
+	return ta.ctx
 }
 
 // WhoCan adds abilities to the actor and returns the same actor instance for chaining.
@@ -104,7 +111,7 @@ func (ta *testActor) AttemptsTo(activities ...core.Activity) {
 			tracker.Start()
 		}
 
-		err := activity.PerformAs(ta)
+		err := activity.PerformAs(ta, ta.ctx)
 
 		if tracker != nil {
 			tracker.Finish(err)
@@ -121,7 +128,6 @@ func (ta *testActor) AttemptsTo(activities ...core.Activity) {
 				ta.testContext.Errorf("Non-critical activity error '%s' failed: %v", activity.Description(), err)
 			case core.Ignore:
 				ta.testContext.Logf("Ignore activity error '%s' failed: %v", activity.Description(), err)
-				// Do nothing
 			}
 		}
 	}
@@ -129,7 +135,7 @@ func (ta *testActor) AttemptsTo(activities ...core.Activity) {
 
 // AnswersTo answers questions with boolean success flag
 func (ta *testActor) AnswersTo(question core.Question[any]) (any, bool) {
-	result, err := question.AnsweredBy(ta)
+	result, err := question.AnsweredBy(ta, ta.ctx)
 	if err != nil {
 		ta.testContext.Errorf("Failed to answer question '%s': %v", question.Description(), err)
 		return nil, false

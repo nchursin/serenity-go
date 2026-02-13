@@ -2,6 +2,7 @@ package testing
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"testing"
 
@@ -19,7 +20,8 @@ func TestReportingIntegration(t *testing.T) {
 	reporter := console_reporter.NewConsoleReporter()
 	reporter.SetOutput(&output)
 
-	test := NewSerenityTestWithReporter(t, reporter)
+	ctx := context.Background()
+	test := NewSerenityTestWithReporter(ctx, t, reporter)
 	defer test.Shutdown()
 
 	// Create actor with API ability
@@ -56,7 +58,8 @@ func TestErrorReporting(t *testing.T) {
 	reporter := console_reporter.NewConsoleReporter()
 	reporter.SetOutput(&output)
 
-	test := NewSerenityTestWithReporter(mockT, reporter)
+	ctx := context.Background()
+	test := NewSerenityTestWithReporter(ctx, mockT, reporter)
 
 	// Manually mark the test as failed to trigger error reporting
 	mockT.Fail()
@@ -80,7 +83,8 @@ func TestMultipleActorsReporting(t *testing.T) {
 	reporter := console_reporter.NewConsoleReporter()
 	reporter.SetOutput(&output)
 
-	test := NewSerenityTestWithReporter(t, reporter)
+	ctx := context.Background()
+	test := NewSerenityTestWithReporter(ctx, t, reporter)
 	defer test.Shutdown()
 
 	// Create multiple actors
@@ -107,7 +111,8 @@ func TestComplexWorkflowReporting(t *testing.T) {
 	reporter := console_reporter.NewConsoleReporter()
 	reporter.SetOutput(&output)
 
-	test := NewSerenityTestWithReporter(t, reporter)
+	ctx := context.Background()
+	test := NewSerenityTestWithReporter(ctx, t, reporter)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("WorkflowActor").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
@@ -148,7 +153,8 @@ func TestConcurrentActivitiesReporting(t *testing.T) {
 	reporter := console_reporter.NewConsoleReporter()
 	reporter.SetOutput(&output)
 
-	test := NewSerenityTestWithReporter(t, reporter)
+	ctx := context.Background()
+	test := NewSerenityTestWithReporter(ctx, t, reporter)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("ConcurrentActor").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))

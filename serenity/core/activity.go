@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -101,9 +102,9 @@ func (t *task) Description() string {
 //	- The task description for identification
 //	- The specific activity that failed
 //	- The original error wrapped with context
-func (t *task) PerformAs(actor Actor) error {
+func (t *task) PerformAs(actor Actor, ctx context.Context) error {
 	for _, activity := range t.activities {
-		if err := activity.PerformAs(actor); err != nil {
+		if err := activity.PerformAs(actor, ctx); err != nil {
 			return fmt.Errorf("task '%s' failed during activity '%s': %w",
 				t.Description(), activity.Description(), err)
 		}
@@ -195,7 +196,7 @@ type interaction struct {
 	description string
 
 	// perform is the function that executes when the interaction is performed
-	perform func(actor Actor) error
+	perform func(actor Actor, ctx context.Context) error
 }
 
 // Do creates a new interaction with the given description and perform function.
@@ -204,7 +205,7 @@ type interaction struct {
 //
 // Parameters:
 //   - description: Human-readable description of what the interaction does
-//   - perform: Function that executes the interaction logic
+//   - perform: Function that executes the interaction logic (receives actor and context)
 //
 // Returns:
 //   - Interaction: A new interaction that executes the provided function
@@ -212,7 +213,7 @@ type interaction struct {
 // Usage Examples:
 //
 //	// Simple API call interaction
-//	sendGetRequest := core.Do("sends GET request to /users", func(actor core.Actor) error {
+//	sendGetRequest := core.Do("sends GET request to /users", func(actor core.Actor, ctx context.Context) error {
 //		api, err := actor.AbilityTo(&api.CallAnAPI{})
 //		if err != nil {
 //			return fmt.Errorf("actor needs API ability: %w", err)
@@ -285,7 +286,7 @@ type interaction struct {
 //  3. Handle errors with proper context
 //  4. Access abilities safely and check for their existence
 //  5. Avoid complex logic in interactions (prefer tasks for workflows)
-func Do(description string, perform func(actor Actor) error) Interaction {
+func Do(description string, perform func(actor Actor, ctx context.Context) error) Interaction {
 	return &interaction{
 		description: description,
 		perform:     perform,
@@ -311,14 +312,15 @@ func (i *interaction) Description() string {
 //
 // Parameters:
 //   - actor: The actor performing this interaction
+//   - ctx: Context for cancellation and timeout
 //
 // Returns:
 //   - error: Whatever error the perform function returns
 //
 // Note: Error handling and wrapping should be done in the perform function
 // to provide proper context about what went wrong.
-func (i *interaction) PerformAs(actor Actor) error {
-	return i.perform(actor)
+func (i *interaction) PerformAs(actor Actor, ctx context.Context) error {
+	return i.perform(actor, ctx)
 }
 
 // FailureMode returns the failure mode for interactions.

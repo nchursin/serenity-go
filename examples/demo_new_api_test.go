@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"testing"
 
 	"github.com/nchursin/serenity-go/serenity/abilities/api"
@@ -12,7 +13,8 @@ import (
 // TestNewAPIDemonstration demonstrates the new TestContext API without require.NoError
 func TestNewAPIDemonstration(t *testing.T) {
 	// Create SerenityTest context - no more manual error handling!
-	test := serenity.NewSerenityTest(t)
+	ctx := context.Background()
+	test := serenity.NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 
 	// Create actor through test context

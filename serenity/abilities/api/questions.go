@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +15,7 @@ import (
 type LastResponseStatus struct{}
 
 // AnsweredBy returns the status code from the last HTTP response
-func (lr LastResponseStatus) AnsweredBy(actor core.Actor) (int, error) {
+func (lr LastResponseStatus) AnsweredBy(actor core.Actor, ctx context.Context) (int, error) {
 	ability, err := actor.AbilityTo(&callAnAPI{})
 	if err != nil {
 		return 0, fmt.Errorf("actor does not have the ability to call an API: %w", err)
@@ -38,7 +39,7 @@ func (lr LastResponseStatus) Description() string {
 type LastResponseBody struct{}
 
 // AnsweredBy returns the body from the last HTTP response
-func (lr LastResponseBody) AnsweredBy(actor core.Actor) (string, error) {
+func (lr LastResponseBody) AnsweredBy(actor core.Actor, ctx context.Context) (string, error) {
 	ability, err := actor.AbilityTo(&callAnAPI{})
 	if err != nil {
 		return "", fmt.Errorf("actor does not have the ability to call an API: %w", err)
@@ -80,7 +81,7 @@ func NewResponseHeader(key string) ResponseHeader {
 }
 
 // AnsweredBy returns the header value from the last HTTP response
-func (rh ResponseHeader) AnsweredBy(actor core.Actor) (string, error) {
+func (rh ResponseHeader) AnsweredBy(actor core.Actor, ctx context.Context) (string, error) {
 	ability, err := actor.AbilityTo(&callAnAPI{})
 	if err != nil {
 		return "", fmt.Errorf("actor does not have the ability to call an API: %w", err)
@@ -109,7 +110,7 @@ func NewResponseBodyAsJSON[T any]() ResponseBodyAsJSON[T] {
 }
 
 // AnsweredBy returns the response body parsed as JSON
-func (rbaj ResponseBodyAsJSON[T]) AnsweredBy(actor core.Actor) (T, error) {
+func (rbaj ResponseBodyAsJSON[T]) AnsweredBy(actor core.Actor, ctx context.Context) (T, error) {
 	var result T
 
 	ability, err := actor.AbilityTo(&callAnAPI{})
@@ -157,7 +158,7 @@ func NewJSONPath(path string) JSONPath {
 }
 
 // AnsweredBy returns the value at the specified JSON path
-func (jp JSONPath) AnsweredBy(actor core.Actor) (any, error) {
+func (jp JSONPath) AnsweredBy(actor core.Actor, ctx context.Context) (any, error) {
 	ability, err := actor.AbilityTo(&callAnAPI{})
 	if err != nil {
 		return nil, fmt.Errorf("actor does not have the ability to call an API: %w", err)
@@ -238,7 +239,7 @@ func (jp JSONPath) extractValue(data any, path []string) (any, error) {
 type ResponseTime struct{}
 
 // AnsweredBy returns the response time (currently returns 0 as timing needs to be implemented in interactions)
-func (rt ResponseTime) AnsweredBy(actor core.Actor) (int64, error) {
+func (rt ResponseTime) AnsweredBy(actor core.Actor, ctx context.Context) (int64, error) {
 	// This would need timing implementation in interactions
 	return 0, nil
 }

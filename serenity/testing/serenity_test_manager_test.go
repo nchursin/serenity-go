@@ -1,6 +1,7 @@
 package testing
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,8 +14,9 @@ import (
 )
 
 func TestSerenityTestWithConsoleReporter(t *testing.T) {
+	ctx := context.Background()
 	// Create a SerenityTest with console reporter
-	test := NewSerenityTestWithReporter(t, console_reporter.NewConsoleReporter())
+	test := NewSerenityTestWithReporter(ctx, t, console_reporter.NewConsoleReporter())
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
@@ -27,7 +29,8 @@ func TestSerenityTestWithConsoleReporter(t *testing.T) {
 }
 
 func TestNewSerenityTestUsesConsoleReporter(t *testing.T) {
-	test := NewSerenityTest(t)
+	ctx := context.Background()
+	test := NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 
 	adapter := test.GetReporterAdapter()
@@ -56,7 +59,8 @@ func TestSerenityTestLifecycleReporting(t *testing.T) {
 	mockTestContext.EXPECT().Name().Return("TestExample")
 	mockTestContext.EXPECT().Failed().Return(false)
 
-	test := NewSerenityTestWithReporter(mockTestContext, mockReporter)
+	ctx := context.Background()
+	test := NewSerenityTestWithReporter(ctx, mockTestContext, mockReporter)
 
 	// Simulate test end
 	test.Shutdown()
@@ -80,7 +84,8 @@ func TestSerenityTestLifecycleReportingFailed(t *testing.T) {
 	mockTestContext.EXPECT().Name().Return("FailedTest")
 	mockTestContext.EXPECT().Failed().Return(true)
 
-	test := NewSerenityTestWithReporter(mockTestContext, mockReporter)
+	ctx := context.Background()
+	test := NewSerenityTestWithReporter(ctx, mockTestContext, mockReporter)
 
 	// Simulate test end
 	test.Shutdown()

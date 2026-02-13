@@ -66,6 +66,8 @@
 package answerable
 
 import (
+	"context"
+
 	"github.com/nchursin/serenity-go/serenity/core"
 )
 
@@ -97,7 +99,7 @@ func ValueOf[T any](value T) core.Question[T] {
 //
 // Parameters:
 //   - description: Human-readable description for test reports
-//   - fn: Function that takes an actor and returns (value, error)
+//   - fn: Function that takes an actor and context, returns (value, error)
 //
 // Returns:
 //   - core.Question[T]: A question that executes the function when answered
@@ -105,13 +107,13 @@ func ValueOf[T any](value T) core.Question[T] {
 // Example:
 //
 //	ensure.That(
-//		answerable.ResultOf("user count", func(actor core.Actor) (int, error) {
+//		answerable.ResultOf("user count", func(actor core.Actor, ctx context.Context) (int, error) {
 //			db := actor.AbilityTo(DatabaseAbility{}).(DatabaseAbility)
 //			return db.CountUsers(), nil
 //		}),
 //		expectations.GreaterThan(0),
 //	)
-func ResultOf[T any](description string, fn func(core.Actor) (T, error)) core.Question[T] {
+func ResultOf[T any](description string, fn func(core.Actor, context.Context) (T, error)) core.Question[T] {
 	if fn == nil {
 		panic("ResultOf: function parameter cannot be nil")
 	}

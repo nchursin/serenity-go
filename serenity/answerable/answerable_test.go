@@ -1,6 +1,7 @@
 package answerable
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -20,6 +21,10 @@ func (m *mockActor) Name() string {
 	return m.name
 }
 
+func (m *mockActor) Context() context.Context {
+	return context.Background()
+}
+
 func (m *mockActor) WhoCan(abilities ...abilities.Ability) core.Actor {
 	return m
 }
@@ -32,7 +37,7 @@ func (m *mockActor) AttemptsTo(activities ...core.Activity) {
 }
 
 func (m *mockActor) AnswersTo(question core.Question[any]) (any, bool) {
-	result, err := question.AnsweredBy(m)
+	result, err := question.AnsweredBy(m, context.Background())
 	return result, err == nil
 }
 
@@ -62,7 +67,7 @@ func TestValueOf_BasicTypes(t *testing.T) {
 			q := ValueOf(tt.value)
 
 			// Test AnsweredBy
-			result, err := q.AnsweredBy(actor)
+			result, err := q.AnsweredBy(actor, context.Background())
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, result)
 
@@ -92,7 +97,7 @@ func TestValueOf_ErrorType(t *testing.T) {
 			q := ValueOf(tt.err)
 
 			// Test AnsweredBy - error should be returned as value, not as error
-			result, err := q.AnsweredBy(actor)
+			result, err := q.AnsweredBy(actor, context.Background())
 			require.NoError(t, err)
 			require.Equal(t, tt.err, result)
 
@@ -111,7 +116,7 @@ func TestValueOf_ComplexTypes(t *testing.T) {
 	user := TestUser{Name: "John", Age: 30}
 	q := ValueOf(user)
 
-	result, err := q.AnsweredBy(actor)
+	result, err := q.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, user, result)
 
@@ -127,7 +132,7 @@ func TestValueOf_PointersAndNil(t *testing.T) {
 	name := "test"
 	q1 := ValueOf(&name)
 
-	result, err := q1.AnsweredBy(actor)
+	result, err := q1.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, &name, result)
 
@@ -139,7 +144,7 @@ func TestValueOf_PointersAndNil(t *testing.T) {
 	var ptr *string
 	q2 := ValueOf(ptr)
 
-	result2, err := q2.AnsweredBy(actor)
+	result2, err := q2.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, (*string)(nil), result2)
 
@@ -155,7 +160,7 @@ func TestValueOf_SlicesAndMaps(t *testing.T) {
 	slice := []int{1, 2, 3}
 	q1 := ValueOf(slice)
 
-	result, err := q1.AnsweredBy(actor)
+	result, err := q1.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, slice, result)
 
@@ -167,7 +172,7 @@ func TestValueOf_SlicesAndMaps(t *testing.T) {
 	m := map[string]int{"a": 1, "b": 2}
 	q2 := ValueOf(m)
 
-	result2, err := q2.AnsweredBy(actor)
+	result2, err := q2.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, m, result2)
 
@@ -184,21 +189,21 @@ func TestValueOf_GenericTypeInference(t *testing.T) {
 	// Integer
 	intQuestion := ValueOf(123)
 	var resultInt int
-	resultInt, err := intQuestion.AnsweredBy(actor)
+	resultInt, err := intQuestion.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, 123, resultInt)
 
 	// String
 	stringQuestion := ValueOf("test")
 	var resultString string
-	resultString, err = stringQuestion.AnsweredBy(actor)
+	resultString, err = stringQuestion.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "test", resultString)
 
 	// Error - should work with error type
 	errQuestion := ValueOf(errors.New("test"))
 	var resultErr error
-	resultErr, err = errQuestion.AnsweredBy(actor)
+	resultErr, err = errQuestion.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, errors.New("test"), resultErr)
 }
@@ -239,15 +244,15 @@ func TestValueOf_IntegrationWithEnsure(t *testing.T) {
 	errorQuestion := ValueOf(errors.New("test error"))
 
 	// Test that they can be answered correctly
-	intResult, err := intQuestion.AnsweredBy(actor)
+	intResult, err := intQuestion.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, 42, intResult)
 
-	stringResult, err := stringQuestion.AnsweredBy(actor)
+	stringResult, err := stringQuestion.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "hello world", stringResult)
 
-	errorResult, err := errorQuestion.AnsweredBy(actor)
+	errorResult, err := errorQuestion.AnsweredBy(actor, context.Background())
 	require.NoError(t, err)
 	require.Error(t, errorResult) // The error itself is the value
 	require.Equal(t, "test error", errorResult.Error())

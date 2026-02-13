@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"testing"
 
 	"github.com/nchursin/serenity-go/serenity/abilities/api"
@@ -11,7 +12,8 @@ import (
 
 // TestJSONPlaceholderBasicsNewAPI demonstrates basic API testing with JSONPlaceholder using new TestContext API
 func TestJSONPlaceholderBasicsNewAPI(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	ctx := context.Background()
+	test := serenity.NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))

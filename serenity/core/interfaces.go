@@ -130,6 +130,7 @@
 package core
 
 import (
+	"context"
 	"time"
 
 	"github.com/nchursin/serenity-go/serenity/abilities"
@@ -199,6 +200,12 @@ import (
 //	Actor implementations are thread-safe for ability management.
 //	Activities are executed sequentially unless explicitly designed for concurrency.
 type Actor interface {
+	// Context returns the actor's context for cancellation and timeout.
+	//
+	// Returns:
+	//   - context.Context: The context associated with this actor
+	Context() context.Context
+
 	// Name returns the actor's name for identification in logs and test reports.
 	//
 	// Returns:
@@ -387,22 +394,23 @@ type Activity interface {
 	//
 	// Parameters:
 	//   - actor: The actor performing this activity
+	//   - ctx: Context for cancellation and timeout
 	//
 	// Returns:
 	//   - error: Nil on success, error details on failure
 	//
 	// Example:
 	//
-	//	func (s *SendRequestActivity) PerformAs(actor core.Actor) error {
+	//	func (s *SendRequestActivity) PerformAs(actor core.Actor, ctx context.Context) error {
 	//		ability, err := actor.AbilityTo(&api.CallAnAPI{})
 	//		if err != nil {
 	//			return fmt.Errorf("actor needs API ability: %w", err)
 	//		}
 	//
 	//		api := ability.(api.CallAnAPI)
-	//		return api.SendRequest(s.method, s.path)
+	//		return api.SendRequest(s.method, s.path, ctx)
 	//	}
-	PerformAs(actor Actor) error
+	PerformAs(actor Actor, ctx context.Context) error
 
 	// Description returns a human-readable description of the activity.
 	// This description is used in test reports and logging.
@@ -697,6 +705,7 @@ type Question[T any] interface {
 	//
 	// Parameters:
 	//   - actor: The actor asking the question
+	//   - ctx: Context for cancellation and timeout
 	//
 	// Returns:
 	//   - T: The typed answer to the question
@@ -704,23 +713,23 @@ type Question[T any] interface {
 	//
 	// Example:
 	//
-	//	func (q *userCountQuestion) AnsweredBy(actor core.Actor) (int, error) {
+	//	func (q *userCountQuestion) AnsweredBy(actor core.Actor, ctx context.Context) (int, error) {
 	//		db, err := actor.AbilityTo(&database.DatabaseAbility{})
 	//		if err != nil {
 	//			return 0, fmt.Errorf("actor needs database ability: %w", err)
 	//		}
 	//
-	//		return db.QueryRow("SELECT COUNT(*) FROM users").Int()
+	//		return db.QueryRowContext(ctx, "SELECT COUNT(*) FROM users").Int()
 	//	}
 	//
 	// Usage:
 	//
-	//	count, err := question.AnsweredBy(actor)
+	//	count, err := question.AnsweredBy(actor, ctx)
 	//	if err != nil {
 	//		return fmt.Errorf("failed to get user count: %w", err)
 	//	}
 	//	fmt.Printf("User count: %d\n", count)
-	AnsweredBy(actor Actor) (T, error)
+	AnsweredBy(actor Actor, ctx context.Context) (T, error)
 
 	// Description returns a human-readable description of what the question asks.
 	// This description is used in test reports and assertion messages.

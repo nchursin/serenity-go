@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,7 +31,7 @@ func (s *sendRequest) Description() string {
 }
 
 // PerformAs executes the send request interaction
-func (s *sendRequest) PerformAs(actor core.Actor) error {
+func (s *sendRequest) PerformAs(actor core.Actor, ctx context.Context) error {
 	if s.request == nil {
 		return fmt.Errorf("request is nil")
 	}
@@ -42,7 +43,7 @@ func (s *sendRequest) PerformAs(actor core.Actor) error {
 
 	callAbility := ability.(CallAnAPI)
 
-	_, err = callAbility.SendRequest(s.request)
+	_, err = callAbility.SendRequest(s.request, ctx)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
@@ -178,7 +179,7 @@ func (ra *RequestActivity) Description() string {
 }
 
 // PerformAs implements core.Activity interface
-func (ra *RequestActivity) PerformAs(actor core.Actor) error {
+func (ra *RequestActivity) PerformAs(actor core.Actor, ctx context.Context) error {
 	if ra.builder == nil {
 		return fmt.Errorf("request builder is nil")
 	}
@@ -190,7 +191,7 @@ func (ra *RequestActivity) PerformAs(actor core.Actor) error {
 
 	// Reuse existing sendRequest logic
 	sendReq := &sendRequest{request: req}
-	return sendReq.PerformAs(actor)
+	return sendReq.PerformAs(actor, ctx)
 }
 
 // FailureMode returns the failure mode for request activities (default: FailFast)

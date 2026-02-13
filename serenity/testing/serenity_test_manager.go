@@ -1,6 +1,7 @@
 package testing
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -34,6 +35,10 @@ type SerenityTest interface {
 	// TestContext returns the embedded testing.TB interface.
 	// This method provides access to the underlying testing framework.
 	TestContext() TestContext
+
+	// Context returns the context associated with this test.
+	// The context is passed to all activities and questions.
+	Context() context.Context
 
 	// ActorCalled creates a new test-aware actor with the specified name.
 	// The actor is automatically configured with TestContext error handling.
@@ -123,7 +128,8 @@ func (tr *testResult) Error() error {
 
 // serenityTest implements SerenityTest
 type serenityTest struct {
-	ctx       TestContext
+	testCtx   TestContext
+	ctx       context.Context
 	actors    map[string]core.Actor
 	mutex     sync.RWMutex
 	adapter   *reporting.TestRunnerAdapter
@@ -132,12 +138,12 @@ type serenityTest struct {
 }
 
 // NewSerenityTest creates a new SerenityTest instance
-func NewSerenityTest(t TestContext) SerenityTest {
-	return NewSerenityTestWithReporter(t, console_reporter.NewConsoleReporter())
+func NewSerenityTest(ctx context.Context, t TestContext) SerenityTest {
+	return NewSerenityTestWithReporter(ctx, t, console_reporter.NewConsoleReporter())
 }
 
 // NewSerenityTestWithReporter creates a new SerenityTest instance with a reporter
-func NewSerenityTestWithReporter(t TestContext, reporter reporting.Reporter) SerenityTest {
+func NewSerenityTestWithReporter(ctx context.Context, t TestContext, reporter reporting.Reporter) SerenityTest {
 	var adapter *reporting.TestRunnerAdapter
 	if reporter != nil {
 		adapter = reporting.NewTestRunnerAdapter(reporter)
@@ -151,7 +157,8 @@ func NewSerenityTestWithReporter(t TestContext, reporter reporting.Reporter) Ser
 	}
 
 	return &serenityTest{
-		ctx:       t,
+		testCtx:   t,
+		ctx:       ctx,
 		actors:    make(map[string]core.Actor),
 		adapter:   adapter,
 		startTime: time.Now(),
@@ -181,8 +188,9 @@ func (st *serenityTest) ActorCalled(name string) core.Actor {
 	actor = &testActor{
 		name:        name,
 		abilities:   make([]abilities.Ability, 0),
-		testContext: st.ctx,
+		testContext: st.testCtx,
 		reporter:    st.adapter,
+		ctx:         st.ctx,
 	}
 
 	st.actors[name] = actor
@@ -192,6 +200,11 @@ func (st *serenityTest) ActorCalled(name string) core.Actor {
 // TestContext returns the embedded testing.TB interface.
 // This method provides access to the underlying testing framework.
 func (st *serenityTest) TestContext() TestContext {
+	return st.testCtx
+}
+
+// Context returns the context associated with this test
+func (st *serenityTest) Context() context.Context {
 	return st.ctx
 }
 
@@ -210,7 +223,7 @@ func (st *serenityTest) Shutdown() {
 	status := reporting.StatusPassed
 	var testErr error
 
-	if st.ctx.Failed() {
+	if st.testCtx.Failed() {
 		status = reporting.StatusFailed
 		testErr = fmt.Errorf("test failed")
 	}
