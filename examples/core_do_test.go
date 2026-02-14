@@ -12,7 +12,7 @@ import (
 // TestCoreDoFunction demonstrates the new core.Do function for quick activity creation
 func TestCoreDoFunction(t *testing.T) {
 	ctx := context.Background()
-	test := serenity.NewSerenityTest(ctx, t)
+	test := serenity.NewSerenityTestWithContext(ctx, t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")

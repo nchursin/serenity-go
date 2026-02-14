@@ -346,7 +346,7 @@ func (f *FileExistsQuestion) Description() string {
 
 func TestFileSystemAbility_BasicOperations(t *testing.T) {
 	ctx := context.Background()
-	test := serenity.NewSerenityTest(ctx, t)
+	test := serenity.NewSerenityTestWithContext(ctx, t)
 	defer test.Shutdown()
 	tempDir := t.TempDir()
 	actor := test.ActorCalled("FileTester").WhoCan(ManageFilesIn(tempDir))
@@ -384,7 +384,7 @@ func TestFileSystemAbility_BasicOperations(t *testing.T) {
 
 func TestFileSystemAbility_DirectoryOperations(t *testing.T) {
 	ctx := context.Background()
-	test := serenity.NewSerenityTest(ctx, t)
+	test := serenity.NewSerenityTestWithContext(ctx, t)
 	defer test.Shutdown()
 	tempDir := t.TempDir()
 	actor := test.ActorCalled("DirectoryTester").WhoCan(ManageFilesIn(tempDir))
@@ -536,7 +536,7 @@ func TestFileSystemAbility_ConcurrentAccess(t *testing.T) {
 // Integration test showing FileSystemAbility working with other abilities
 func TestFileSystemAbility_WithAPIIntegration(t *testing.T) {
 	ctx := context.Background()
-	test := serenity.NewSerenityTest(ctx, t)
+	test := serenity.NewSerenityTestWithContext(ctx, t)
 	defer test.Shutdown()
 	tempDir := t.TempDir()
 	actor := test.ActorCalled("IntegrationTester").WhoCan(

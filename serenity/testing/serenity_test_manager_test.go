@@ -30,7 +30,7 @@ func TestSerenityTestWithConsoleReporter(t *testing.T) {
 
 func TestNewSerenityTestUsesConsoleReporter(t *testing.T) {
 	ctx := context.Background()
-	test := NewSerenityTest(ctx, t)
+	test := NewSerenityTestWithContext(ctx, t)
 	defer test.Shutdown()
 
 	adapter := test.GetReporterAdapter()

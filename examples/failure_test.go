@@ -1,7 +1,6 @@
 package examples
 
 import (
-	"context"
 	"testing"
 
 	"github.com/nchursin/serenity-go/serenity/abilities/api"
@@ -12,7 +11,7 @@ import (
 
 // TestFailureHandling demonstrates how different failure modes work
 func TestFailureHandling(t *testing.T) {
-	test := serenity.NewSerenityTest(context.Background(), t)
+	test := serenity.NewSerenityTest(t)
 	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))

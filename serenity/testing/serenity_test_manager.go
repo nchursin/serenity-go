@@ -138,7 +138,12 @@ type serenityTest struct {
 }
 
 // NewSerenityTest creates a new SerenityTest instance
-func NewSerenityTest(ctx context.Context, t TestContext) SerenityTest {
+func NewSerenityTest(t TestContext) SerenityTest {
+	return NewSerenityTestWithReporter(context.Background(), t, console_reporter.NewConsoleReporter())
+}
+
+// NewSerenityTest creates a new SerenityTest instance
+func NewSerenityTestWithContext(ctx context.Context, t TestContext) SerenityTest {
 	return NewSerenityTestWithReporter(ctx, t, console_reporter.NewConsoleReporter())
 }
 

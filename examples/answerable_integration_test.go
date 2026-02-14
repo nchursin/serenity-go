@@ -16,7 +16,7 @@ import (
 // with ensure.That() assertions using the new TestContext API.
 func TestAnswerableWithEnsure(t *testing.T) {
 	ctx := context.Background()
-	test := serenity.NewSerenityTest(ctx, t)
+	test := serenity.NewSerenityTestWithContext(ctx, t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
@@ -54,7 +54,7 @@ func TestAnswerableWithEnsure(t *testing.T) {
 // that answerable.ValueOf generates for different types.
 func TestAnswerableDescriptionFormats(t *testing.T) {
 	ctx := context.Background()
-	test := serenity.NewSerenityTest(ctx, t)
+	test := serenity.NewSerenityTestWithContext(ctx, t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
