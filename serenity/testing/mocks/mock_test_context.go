@@ -39,6 +39,18 @@ func (m *MockTestContext) EXPECT() *MockTestContextMockRecorder {
 	return m.recorder
 }
 
+// Cleanup mocks base method.
+func (m *MockTestContext) Cleanup(arg0 func()) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Cleanup", arg0)
+}
+
+// Cleanup indicates an expected call of Cleanup.
+func (mr *MockTestContextMockRecorder) Cleanup(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Cleanup", reflect.TypeOf((*MockTestContext)(nil).Cleanup), arg0)
+}
+
 // Errorf mocks base method.
 func (m *MockTestContext) Errorf(format string, args ...any) {
 	m.ctrl.T.Helper()
@@ -80,6 +92,18 @@ func (m *MockTestContext) Failed() bool {
 func (mr *MockTestContextMockRecorder) Failed() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Failed", reflect.TypeOf((*MockTestContext)(nil).Failed))
+}
+
+// Helper mocks base method.
+func (m *MockTestContext) Helper() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Helper")
+}
+
+// Helper indicates an expected call of Helper.
+func (mr *MockTestContextMockRecorder) Helper() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Helper", reflect.TypeOf((*MockTestContext)(nil).Helper))
 }
 
 // Logf mocks base method.
