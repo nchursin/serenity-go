@@ -139,16 +139,19 @@ type serenityTest struct {
 
 // NewSerenityTest creates a new SerenityTest instance
 func NewSerenityTest(t TestContext) SerenityTest {
+	t.Helper()
 	return NewSerenityTestWithReporter(context.Background(), t, console_reporter.NewConsoleReporter())
 }
 
 // NewSerenityTest creates a new SerenityTest instance
 func NewSerenityTestWithContext(ctx context.Context, t TestContext) SerenityTest {
+	t.Helper()
 	return NewSerenityTestWithReporter(ctx, t, console_reporter.NewConsoleReporter())
 }
 
 // NewSerenityTestWithReporter creates a new SerenityTest instance with a reporter
 func NewSerenityTestWithReporter(ctx context.Context, t TestContext, reporter reporting.Reporter) SerenityTest {
+	t.Helper()
 	var adapter *reporting.TestRunnerAdapter
 	if reporter != nil {
 		adapter = reporting.NewTestRunnerAdapter(reporter)
@@ -161,7 +164,7 @@ func NewSerenityTestWithReporter(ctx context.Context, t TestContext, reporter re
 		reporter.OnTestStart(testName)
 	}
 
-	return &serenityTest{
+	st := &serenityTest{
 		testCtx:   t,
 		ctx:       ctx,
 		actors:    make(map[string]core.Actor),
@@ -169,6 +172,9 @@ func NewSerenityTestWithReporter(ctx context.Context, t TestContext, reporter re
 		startTime: time.Now(),
 		testName:  testName,
 	}
+
+	t.Cleanup(func() { t.Helper(); st.Shutdown() })
+	return st
 }
 
 // ActorCalled returns an actor with the given name
