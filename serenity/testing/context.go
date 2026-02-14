@@ -82,6 +82,10 @@ type TestContext interface {
 
 	// Failed returns true if the test has already failed
 	Failed() bool
+
+	Cleanup(func())
+
+	Helper()
 }
 
 // Advanced Usage Examples:
