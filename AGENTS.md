@@ -213,7 +213,6 @@ Example (New TestContext API):
 ```go
 func TestJSONPlaceholderBasics(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
@@ -229,7 +228,6 @@ Example (Legacy with require):
 ```go
 func TestJSONPlaceholderBasics(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 

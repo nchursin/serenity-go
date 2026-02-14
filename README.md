@@ -39,7 +39,6 @@ import (
 
 func TestAPI(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     // Create an actor with API ability
     actor := test.ActorCalled("APITester").WhoCan(
@@ -71,7 +70,6 @@ Actors represent people or systems interacting with your application:
 
 ```go
 test := serenity.NewSerenityTest(t)
-defer test.Shutdown()
 
 // Create an actor
 actor := test.ActorCalled("John Doe")
@@ -86,7 +84,6 @@ Abilities enable actors to interact with different interfaces:
 
 ```go
 test := serenity.NewSerenityTest(t)
-defer test.Shutdown()
 
 // HTTP API ability
 apiAbility := api.CallAnApiAt("https://api.example.com")
@@ -278,7 +275,6 @@ The TestContext API automatically provides console reporting:
 ```go
 func TestAPITesting(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
@@ -336,7 +332,6 @@ import (
 reporter := console_reporter.NewConsoleReporter()
 
 test := serenity.NewSerenityTestWithReporter(t, reporter)
-defer test.Shutdown()
 ```
 
 For detailed documentation on console reporting, see [docs/reporting.md](docs/reporting.md).
@@ -362,7 +357,6 @@ reporter := console_reporter.NewConsoleReporter()
 reporter.SetOutput(file)
 
 test := serenity.NewSerenityTestWithReporter(t, reporter)
-defer test.Shutdown()
 ```
 
 For detailed documentation on console reporting, see [docs/reporting.md](docs/reporting.md).
@@ -491,7 +485,6 @@ actor.AttemptsTo(
 
 ```go
 test := serenity.NewSerenityTest(t)
-defer test.Shutdown()
 
 admin := test.ActorCalled("Admin").WhoCan(api.CallAnApiAt(baseURL))
 user := test.ActorCalled("RegularUser").WhoCan(api.CallAnApiAt(baseURL))

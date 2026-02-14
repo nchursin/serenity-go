@@ -14,7 +14,6 @@ import (
 func TestJSONPlaceholderBasicsNewAPI(t *testing.T) {
 	ctx := context.Background()
 	test := serenity.NewSerenityTestWithContext(ctx, t)
-	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 

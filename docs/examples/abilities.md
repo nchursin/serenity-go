@@ -211,7 +211,6 @@ func (i *InsertDataActivity) PerformAs(actor core.Actor) error {
 ```go
 func TestDatabaseOperations(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("DBAdmin").WhoCan(
         database.ConnectToPostgreSQL("postgres://user:pass@localhost/testdb?sslmode=disable"),
@@ -436,7 +435,6 @@ func copyFile(src, dst string) error {
 ```go
 func TestFileSystemWithBackup(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     tempDir := t.TempDir()
     
@@ -751,7 +749,6 @@ type RedisAbility interface {
 ```go
 func TestRedisOperations(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     // Предполагаем, что у вас запущен Redis на localhost:6379
     actor := test.ActorCalled("RedisUser").WhoCan(

@@ -17,7 +17,6 @@ ConsoleReporter автоматически отображает информац
 ```go
 func TestAPITesting(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
@@ -50,7 +49,6 @@ func TestCustomReporting(t *testing.T) {
     reporter := console_reporter.NewConsoleReporter()
 
     test := serenity.NewSerenityTestWithReporter(t, reporter)
-    defer test.Shutdown()
 
     // ... тестовый код
 }
@@ -80,7 +78,6 @@ defer file.Close()
 reporter.SetOutput(file)
 
 test := serenity.NewSerenityTestWithReporter(t, reporter)
-defer test.Shutdown()
 
 // ... тестовый код
 ```
@@ -123,7 +120,6 @@ reporter := console_reporter.NewConsoleReporter()
 reporter.SetOutput(file)
 
 test := serenity.NewSerenityTestWithReporter(t, reporter)
-defer test.Shutdown()
 
 // ... тестовый код
 ```
@@ -176,7 +172,6 @@ ConsoleReporter автоматически интегрирован с TestConte
 
 ```go
 test := serenity.NewSerenityTest(t)  // Автоматически использует ConsoleReporter
-defer test.Shutdown()                // Автоматически вызывает очистку ресурсов
 ```
 
 ### Интеграция с SerenityTest
@@ -188,7 +183,6 @@ import (
 )
 
 test := serenity.NewSerenityTestWithReporter(t, customReporter)
-defer test.Shutdown()
 ```
 
 ### Обработка ошибок
@@ -209,7 +203,6 @@ ConsoleReporter потокобезопасен и может использов�
 ```go
 func TestOldStyle(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("Tester").WhoCan(api.CallAnApiAt("https://api.example.com"))
 
@@ -228,7 +221,6 @@ func TestOldStyle(t *testing.T) {
 ```go
 func TestNewStyle(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("Tester").WhoCan(api.CallAnApiAt("https://api.example.com"))
 
@@ -245,7 +237,6 @@ func TestNewStyle(t *testing.T) {
 1. **Используйте TestContext API** для автоматического репортинга
 2. **Настраивайте файловый вывод** для CI/CD пайплайнов
 3. **Используйте descripting имена** для акторов для лучшей читаемости
-4. **Очищайте ресурсы** через `defer test.Shutdown()`
 5. **Настройте quiet mode** для CI сред, где важен только файловый вывод
 
 ## Troubleshooting
@@ -283,7 +274,6 @@ import (
 
 func TestParallel1(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
     // ... тестовый код
 }
 ```

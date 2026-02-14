@@ -17,7 +17,6 @@ import (
 func TestAnswerableWithEnsure(t *testing.T) {
 	ctx := context.Background()
 	test := serenity.NewSerenityTestWithContext(ctx, t)
-	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
 
@@ -55,7 +54,6 @@ func TestAnswerableWithEnsure(t *testing.T) {
 func TestAnswerableDescriptionFormats(t *testing.T) {
 	ctx := context.Background()
 	test := serenity.NewSerenityTestWithContext(ctx, t)
-	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
 

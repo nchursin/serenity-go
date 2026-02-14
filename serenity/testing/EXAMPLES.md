@@ -8,7 +8,6 @@ This document demonstrates recommended patterns for using the TestContext API in
 func TestAPIExample(t *testing.T) {
     // ALWAYS use defer Shutdown() immediately after test creation
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     // Use descriptive actor names for better reporting
     apiUser := test.ActorCalled("APIUser").WhoCan(
@@ -32,7 +31,6 @@ func TestAPIExample(t *testing.T) {
 ```go
 func TestConcurrentOperations(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     // Actors are thread-safe and can be shared across goroutines
     actor := test.ActorCalled("ConcurrentUser").WhoCan(
@@ -62,7 +60,6 @@ func TestConcurrentOperations(t *testing.T) {
 ```go
 func TestErrorScenarios(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("ErrorProneUser").WhoCan(
         api.CallAnApiAt("https://invalid-domain-that-does-not-exist.com"),
@@ -79,7 +76,6 @@ func TestErrorScenarios(t *testing.T) {
 ```go
 func TestMultipleRoles(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     // Create specialized actors for different roles
     admin := test.ActorCalled("Admin").WhoCan(api.CallAnApiAt("https://api.example.com"))
@@ -113,7 +109,6 @@ func TestWithCustomReporting(t *testing.T) {
     }
 
     test := serenity.NewSerenityTestWithReporter(t, reporter)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("ReportedUser").WhoCan(api.CallAnApiAt("https://api.example.com"))
     actor.AttemptsTo(api.SendGetRequest("/health"))
@@ -144,12 +139,11 @@ func (r *customReporter) OnActivityFinish(activityName string, actorName string,
 
 ## Key Principles
 
-1. **Always call `defer test.Shutdown()` immediately after test creation**
-2. **Use descriptive actor names** for better reporting
-3. **Chain related activities** together for logical grouping
-4. **Leverage automatic error handling** - no need for manual `require.NoError`
-5. **Actors are thread-safe** - can be shared across goroutines
-6. **Use `ensure.That`** for assertions in TestContext API
+1. **Use descriptive actor names** for better reporting
+2. **Chain related activities** together for logical grouping
+3. **Leverage automatic error handling** - no need for manual `require.NoError`
+4. **Actors are thread-safe** - can be shared across goroutines
+5. **Use `ensure.That`** for assertions in TestContext API
 
 ## Migration from Legacy API
 
@@ -157,7 +151,6 @@ func (r *customReporter) OnActivityFinish(activityName string, actorName string,
 ```go
 func TestLegacyApproach(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("APIUser").WhoCan(
         api.CallAnApiAt("https://api.example.com"),
@@ -176,7 +169,6 @@ func TestLegacyApproach(t *testing.T) {
 ```go
 func TestNewApproach(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("APIUser").WhoCan(
         api.CallAnApiAt("https://api.example.com"),

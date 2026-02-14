@@ -20,6 +20,9 @@ func TestIntentionalFailure(t *testing.T) {
 	// Create mock TestContext
 	mockCtx := mocks.NewMockTestContext(ctrl)
 
+	mockCtx.EXPECT().Helper().Times(2)
+	mockCtx.EXPECT().Cleanup(gomock.Any())
+
 	// Expect Name() to be called during test initialization
 	mockCtx.EXPECT().Name().Return("TestIntentionalFailure")
 
@@ -32,6 +35,7 @@ func TestIntentionalFailure(t *testing.T) {
 
 	// Create SerenityTest with mock context
 	test := serenity.NewSerenityTest(mockCtx)
+	// Call it manually to do it before mocks
 	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))

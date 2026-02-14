@@ -20,7 +20,6 @@ func TestConsoleReportingDemo(t *testing.T) {
 	reporter := console_reporter.NewConsoleReporter()
 
 	test := serenity.NewSerenityTestWithReporter(context.Background(), t, reporter)
-	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("DemoAPITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
@@ -50,7 +49,6 @@ func TestReportingToFile(t *testing.T) {
 	reporter.SetOutput(file)
 
 	test := serenity.NewSerenityTestWithReporter(context.Background(), t, reporter)
-	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("FileReporter").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 

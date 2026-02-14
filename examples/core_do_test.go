@@ -13,7 +13,6 @@ import (
 func TestCoreDoFunction(t *testing.T) {
 	ctx := context.Background()
 	test := serenity.NewSerenityTestWithContext(ctx, t)
-	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
 

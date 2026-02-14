@@ -14,7 +14,6 @@
 // Basic Usage:
 //
 //	test := serenity.NewSerenityTest(t)
-//	defer test.Shutdown()
 //
 //	actor := test.ActorCalled("APITester").WhoCan(
 //		api.CallAnApiAt("https://api.example.com"),
@@ -28,7 +27,6 @@
 // Multiple Actors:
 //
 //	test := serenity.NewSerenityTest(t)
-//	defer test.Shutdown()
 //
 //	admin := test.ActorCalled("Admin").WhoCan(api.CallAnApiAt(apiURL))
 //	user := test.ActorCalled("User").WhoCan(api.CallAnApiAt(apiURL))
@@ -40,7 +38,6 @@
 //
 //	reporter := custom.NewJSONReporter()
 //	test := serenity.NewSerenityTestWithReporter(t, reporter)
-//	defer test.Shutdown()
 //
 // Error Handling:
 //
@@ -93,7 +90,6 @@ type TestContext interface {
 // Concurrent Testing:
 //
 //	test := serenity.NewSerenityTest(t)
-//	defer test.Shutdown()
 //
 //	var wg sync.WaitGroup
 //	actor := test.ActorCalled("ConcurrentUser").WhoCan(api.CallAnApiAt(apiURL))
@@ -113,7 +109,6 @@ type TestContext interface {
 // Error Scenarios:
 //
 //	test := serenity.NewSerenityTest(t)
-//	defer test.Shutdown()
 //
 //	actor := test.ActorCalled("ErrorProneUser").WhoCan(api.CallAnApiAt("https://invalid.example.com"))
 //
@@ -124,7 +119,6 @@ type TestContext interface {
 //
 //	reporter := &customReporter{output: os.Stdout}
 //	test := serenity.NewSerenityTestWithReporter(t, reporter)
-//	defer test.Shutdown()
 //
 //	actor := test.ActorCalled("ReportedUser").WhoCan(api.CallAnApiAt(apiURL))
 //	actor.AttemptsTo(api.SendGetRequest("/users"))

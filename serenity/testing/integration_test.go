@@ -22,7 +22,6 @@ func TestReportingIntegration(t *testing.T) {
 
 	ctx := context.Background()
 	test := NewSerenityTestWithReporter(ctx, t, reporter)
-	defer test.Shutdown()
 
 	// Create actor with API ability
 	apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
@@ -85,7 +84,6 @@ func TestMultipleActorsReporting(t *testing.T) {
 
 	ctx := context.Background()
 	test := NewSerenityTestWithReporter(ctx, t, reporter)
-	defer test.Shutdown()
 
 	// Create multiple actors
 	actor1 := test.ActorCalled("Actor1").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
@@ -113,7 +111,6 @@ func TestComplexWorkflowReporting(t *testing.T) {
 
 	ctx := context.Background()
 	test := NewSerenityTestWithReporter(ctx, t, reporter)
-	defer test.Shutdown()
 
 	actor := test.ActorCalled("WorkflowActor").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
@@ -155,7 +152,6 @@ func TestConcurrentActivitiesReporting(t *testing.T) {
 
 	ctx := context.Background()
 	test := NewSerenityTestWithReporter(ctx, t, reporter)
-	defer test.Shutdown()
 
 	actor := test.ActorCalled("ConcurrentActor").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
