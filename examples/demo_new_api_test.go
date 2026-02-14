@@ -15,7 +15,6 @@ func TestNewAPIDemonstration(t *testing.T) {
 	// Create SerenityTest context - no more manual error handling!
 	ctx := context.Background()
 	test := serenity.NewSerenityTestWithContext(ctx, t)
-	defer test.Shutdown()
 
 	// Create actor through test context
 	apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))

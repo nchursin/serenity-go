@@ -15,7 +15,6 @@
 //
 //	// Create an actor with specific abilities
 //	test := serenity.NewSerenityTest(t)
-//	defer test.Shutdown()
 //	actor := test.ActorCalled("TestUser").WhoCan(
 //		api.CallAnApiAt("https://api.example.com"),
 //		db.ConnectToDatabase("postgres://localhost/test"),
@@ -144,7 +143,6 @@ import (
 //
 //	// Basic actor creation
 //	test := serenity.NewSerenityTest(t)
-//	defer test.Shutdown()
 //	actor := test.ActorCalled("TestUser")
 //
 //	// Actor with abilities
@@ -170,7 +168,6 @@ import (
 // Example Usage:
 //
 //	test := serenity.NewSerenityTest(t)
-//	defer test.Shutdown()
 //	actor := test.ActorCalled("OrderManager").WhoCan(
 //		api.CallAnApiAt("https://api.shop.com"),
 //		db.ConnectToDatabase("postgres://localhost/shop"),
@@ -214,7 +211,6 @@ type Actor interface {
 	// Example:
 	//
 	//	test := serenity.NewSerenityTest(t)
-	//	defer test.Shutdown()
 	//	actor := test.ActorCalled("TestUser")
 	//	fmt.Println(actor.Name()) // Output: "TestUser"
 	Name() string
@@ -231,7 +227,6 @@ type Actor interface {
 	// Example:
 	//
 	//	test := serenity.NewSerenityTest(t)
-	//	defer test.Shutdown()
 	//	actor := test.ActorCalled("FullStackTester").WhoCan(
 	//		api.CallAnApiAt("https://api.example.com"),
 	//		db.ConnectToDatabase("postgres://localhost/test"),

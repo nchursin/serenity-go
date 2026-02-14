@@ -17,7 +17,6 @@ import (
 
 func TestStaticValues(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("Tester")
 
@@ -48,7 +47,6 @@ func TestStaticValues(t *testing.T) {
 ```go
 func TestMixedQuestions(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://api.example.com"))
 

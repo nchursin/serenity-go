@@ -56,7 +56,6 @@ type SerenityTest interface {
 	//
 	// Example:
 	//	test := serenity.NewSerenityTest(t)
-	//	defer test.Shutdown() // Ensure cleanup
 	//
 	// Side effects:
 	//	- Flushes any pending reports
@@ -74,7 +73,6 @@ type SerenityTest interface {
 //
 //	func TestAPIEndpoints(t *testing.T) {
 //		test := serenity.NewSerenityTest(t)
-//		defer test.Shutdown()
 //
 //		actor := test.ActorCalled("APITester").WhoCan(
 //			api.CallAnApiAt("https://jsonplaceholder.typicode.com"),
@@ -92,7 +90,6 @@ type SerenityTest interface {
 //	func TestWithCustomReporting(t *testing.T) {
 //		reporter := custom.NewJSONReporter()
 //		test := serenity.NewSerenityTestWithReporter(t, reporter)
-//		defer test.Shutdown()
 //
 //		actor := test.ActorCalled("ReportedUser").WhoCan(api.CallAnApiAt(apiURL))
 //		actor.AttemptsTo(api.SendGetRequest("/health"))
@@ -135,6 +132,7 @@ type serenityTest struct {
 	adapter   *reporting.TestRunnerAdapter
 	startTime time.Time
 	testName  string
+	shutdown  bool
 }
 
 // NewSerenityTest creates a new SerenityTest instance
@@ -229,6 +227,10 @@ func (st *serenityTest) Shutdown() {
 	st.mutex.Lock()
 	defer st.mutex.Unlock()
 
+	if st.shutdown {
+		return
+	}
+
 	// Create test result
 	duration := time.Since(st.startTime)
 	status := reporting.StatusPassed
@@ -253,4 +255,5 @@ func (st *serenityTest) Shutdown() {
 
 	// Clear actors map
 	st.actors = make(map[string]core.Actor)
+	st.shutdown = true
 }

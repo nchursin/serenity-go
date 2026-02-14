@@ -22,7 +22,6 @@
 func TestSerenityTestWithConsoleReporter(t *testing.T) {
     // Create a SerenityTest with console reporter
     test := NewSerenityTestWithReporter(t, nil)
-    defer test.Shutdown()
     
     actor := test.ActorCalled("TestActor")
     require.NotNil(t, actor)
@@ -112,7 +111,6 @@ git commit -m "feat: extend SerenityTest to support optional reporter"
 ```go
 func TestNewSerenityTestUsesConsoleReporter(t *testing.T) {
     test := NewSerenityTest(t)
-    defer test.Shutdown()
     
     adapter := test.GetReporterAdapter()
     require.NotNil(t, adapter)
@@ -446,7 +444,6 @@ git commit -m "feat: add test lifecycle reporting to SerenityTest"
 // TestJSONPlaceholderBasicsNewAPI demonstrates basic API testing with JSONPlaceholder using new TestContext API
 func TestJSONPlaceholderBasicsNewAPI(t *testing.T) {
     test := serenity.NewSerenityTest(t)
-    defer test.Shutdown()
 
     apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
@@ -492,7 +489,6 @@ func TestConsoleReportingDemo(t *testing.T) {
     reporter := console_reporter.NewConsoleReporter()
     
     test := serenity.NewSerenityTestWithReporter(t, reporter)
-    defer test.Shutdown()
 
     apiTester := test.ActorCalled("DemoAPITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
 
@@ -523,7 +519,6 @@ func TestReportingToFile(t *testing.T) {
     reporter.SetOutput(file)
     
     test := serenity.NewSerenityTestWithReporter(t, reporter)
-    defer test.Shutdown()
 
     apiTester := test.ActorCalled("FileReporter").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
     
@@ -589,7 +584,6 @@ func TestReportingIntegration(t *testing.T) {
     reporter.SetOutput(&buf)
     
     test := NewSerenityTestWithReporter(t, reporter)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("IntegrationTester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
     
@@ -615,7 +609,6 @@ func TestErrorReporting(t *testing.T) {
     reporter.SetOutput(&buf)
     
     test := NewSerenityTestWithReporter(t, reporter)
-    defer test.Shutdown()
 
     actor := test.ActorCalled("ErrorTester")
     
@@ -700,7 +693,6 @@ Serenity-Go provides built-in console reporting that shows detailed execution of
 ```go
 func TestMyAPI(t *testing.T) {
     test := serenity.NewSerenityTest(t)  // Uses ConsoleReporter by default
-    defer test.Shutdown()
 
     actor := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://api.example.com"))
     
@@ -717,7 +709,6 @@ func TestMyAPI(t *testing.T) {
 // Create custom reporter
 reporter := console_reporter.NewConsoleReporter()
 test := serenity.NewSerenityTestWithReporter(t, reporter)
-defer test.Shutdown()
 ```
 
 ### File Output

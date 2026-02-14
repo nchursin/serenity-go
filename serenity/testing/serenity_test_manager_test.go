@@ -17,7 +17,6 @@ func TestSerenityTestWithConsoleReporter(t *testing.T) {
 	ctx := context.Background()
 	// Create a SerenityTest with console reporter
 	test := NewSerenityTestWithReporter(ctx, t, console_reporter.NewConsoleReporter())
-	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
 	require.NotNil(t, actor)
@@ -31,7 +30,6 @@ func TestSerenityTestWithConsoleReporter(t *testing.T) {
 func TestNewSerenityTestUsesConsoleReporter(t *testing.T) {
 	ctx := context.Background()
 	test := NewSerenityTestWithContext(ctx, t)
-	defer test.Shutdown()
 
 	adapter := test.GetReporterAdapter()
 	require.NotNil(t, adapter)
@@ -58,6 +56,8 @@ func TestSerenityTestLifecycleReporting(t *testing.T) {
 
 	mockTestContext.EXPECT().Name().Return("TestExample")
 	mockTestContext.EXPECT().Failed().Return(false)
+	mockTestContext.EXPECT().Helper()
+	mockTestContext.EXPECT().Cleanup(gomock.Any())
 
 	ctx := context.Background()
 	test := NewSerenityTestWithReporter(ctx, mockTestContext, mockReporter)
@@ -83,6 +83,8 @@ func TestSerenityTestLifecycleReportingFailed(t *testing.T) {
 
 	mockTestContext.EXPECT().Name().Return("FailedTest")
 	mockTestContext.EXPECT().Failed().Return(true)
+	mockTestContext.EXPECT().Helper()
+	mockTestContext.EXPECT().Cleanup(gomock.Any())
 
 	ctx := context.Background()
 	test := NewSerenityTestWithReporter(ctx, mockTestContext, mockReporter)
