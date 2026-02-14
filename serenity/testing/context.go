@@ -59,7 +59,7 @@
 //	use actors created from the same SerenityTest instance.
 package testing
 
-//go:generate mockgen -source=context.go -destination=mocks/mock_test_context.go -package=mocks
+//go:generate go run go.uber.org/mock/mockgen@latest -source=context.go -destination=mocks/mock_test_context.go -package=mocks
 
 // TestContext provides a testing.TB wrapper for automatic error handling.
 // This interface enables the TestContext API where test failures are automatically
