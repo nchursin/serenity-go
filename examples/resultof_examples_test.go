@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 
 // TestResultOf demonstrates usage of answerable.ResultOf for dynamic assertions
 func TestResultOf(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	test := serenity.NewSerenityTest(context.Background(), t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("ResultOfTester")
@@ -22,7 +23,7 @@ func TestResultOf(t *testing.T) {
 	actor.AttemptsTo(
 		// Simple calculation
 		ensure.That(
-			answerable.ResultOf("calculated value", func(actor core.Actor) (int, error) {
+			answerable.ResultOf("calculated value", func(actor core.Actor, ctx context.Context) (int, error) {
 				return 42, nil
 			}),
 			expectations.Equals(42),
@@ -30,7 +31,7 @@ func TestResultOf(t *testing.T) {
 
 		// String manipulation
 		ensure.That(
-			answerable.ResultOf("greeting message", func(actor core.Actor) (string, error) {
+			answerable.ResultOf("greeting message", func(actor core.Actor, ctx context.Context) (string, error) {
 				return "Hello, " + actor.Name(), nil
 			}),
 			expectations.Contains("Hello, ResultOfTester"),
@@ -38,7 +39,7 @@ func TestResultOf(t *testing.T) {
 
 		// Boolean logic
 		ensure.That(
-			answerable.ResultOf("validation result", func(actor core.Actor) (bool, error) {
+			answerable.ResultOf("validation result", func(actor core.Actor, ctx context.Context) (bool, error) {
 				name := actor.Name()
 				return len(name) > 5, nil
 			}),
@@ -47,7 +48,7 @@ func TestResultOf(t *testing.T) {
 
 		// Float calculation
 		ensure.That(
-			answerable.ResultOf("division result", func(actor core.Actor) (float64, error) {
+			answerable.ResultOf("division result", func(actor core.Actor, ctx context.Context) (float64, error) {
 				return 10.0 / 2.0, nil
 			}),
 			expectations.Equals(5.0),
@@ -57,7 +58,7 @@ func TestResultOf(t *testing.T) {
 
 // TestResultOfCalculations demonstrates using ResultOf for calculations
 func TestResultOfCalculations(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	test := serenity.NewSerenityTest(context.Background(), t)
 	defer test.Shutdown()
 
 	dataProcessor := test.ActorCalled("DataProcessor")
@@ -67,7 +68,7 @@ func TestResultOfCalculations(t *testing.T) {
 
 	dataProcessor.AttemptsTo(
 		ensure.That(
-			answerable.ResultOf("sum of even numbers", func(actor core.Actor) (int, error) {
+			answerable.ResultOf("sum of even numbers", func(actor core.Actor, ctx context.Context) (int, error) {
 				sum := 0
 				for _, num := range numbers {
 					if num%2 == 0 {
@@ -80,7 +81,7 @@ func TestResultOfCalculations(t *testing.T) {
 		),
 
 		ensure.That(
-			answerable.ResultOf("average of numbers", func(actor core.Actor) (float64, error) {
+			answerable.ResultOf("average of numbers", func(actor core.Actor, ctx context.Context) (float64, error) {
 				if len(numbers) == 0 {
 					return 0, fmt.Errorf("no numbers to calculate average")
 				}
@@ -94,7 +95,7 @@ func TestResultOfCalculations(t *testing.T) {
 		),
 
 		ensure.That(
-			answerable.ResultOf("maximum value", func(actor core.Actor) (int, error) {
+			answerable.ResultOf("maximum value", func(actor core.Actor, ctx context.Context) (int, error) {
 				if len(numbers) == 0 {
 					return 0, fmt.Errorf("no numbers to find maximum")
 				}
@@ -113,7 +114,7 @@ func TestResultOfCalculations(t *testing.T) {
 
 // TestResultWithErrorHandling demonstrates error handling in ResultOf functions
 func TestResultWithErrorHandling(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	test := serenity.NewSerenityTest(context.Background(), t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("ErrorTestActor")
@@ -122,7 +123,7 @@ func TestResultWithErrorHandling(t *testing.T) {
 	actor.AttemptsTo(
 		// This will succeed
 		ensure.That(
-			answerable.ResultOf("successful operation", func(actor core.Actor) (string, error) {
+			answerable.ResultOf("successful operation", func(actor core.Actor, ctx context.Context) (string, error) {
 				return "success", nil
 			}),
 			expectations.Equals("success"),
@@ -130,7 +131,7 @@ func TestResultWithErrorHandling(t *testing.T) {
 
 		// Example: Conditional logic with error handling
 		ensure.That(
-			answerable.ResultOf("safe division", func(actor core.Actor) (float64, error) {
+			answerable.ResultOf("safe division", func(actor core.Actor, ctx context.Context) (float64, error) {
 				numerator, denominator := 10, 2
 				if denominator == 0 {
 					return 0, fmt.Errorf("division by zero")
@@ -142,7 +143,7 @@ func TestResultWithErrorHandling(t *testing.T) {
 
 		// Example: String manipulation with validation
 		ensure.That(
-			answerable.ResultOf("validated string", func(actor core.Actor) (string, error) {
+			answerable.ResultOf("validated string", func(actor core.Actor, ctx context.Context) (string, error) {
 				input := "test"
 				if input == "" {
 					return "", fmt.Errorf("input cannot be empty")
@@ -156,14 +157,14 @@ func TestResultWithErrorHandling(t *testing.T) {
 
 // TestResultOfWithActor demonstrates using actor properties in ResultOf
 func TestResultOfWithActor(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	test := serenity.NewSerenityTest(context.Background(), t)
 	defer test.Shutdown()
 
 	actor1 := test.ActorCalled("Actor1")
 	actor2 := test.ActorCalled("Actor2")
 
 	// Both actors use the same ResultOf question but get different results
-	greetingQuestion := answerable.ResultOf("personalized greeting", func(actor core.Actor) (string, error) {
+	greetingQuestion := answerable.ResultOf("personalized greeting", func(actor core.Actor, ctx context.Context) (string, error) {
 		return fmt.Sprintf("Hello, %s!", actor.Name()), nil
 	})
 
@@ -176,7 +177,7 @@ func TestResultOfWithActor(t *testing.T) {
 	)
 
 	// Different actors can have different calculations
-	nameLengthQuestion := answerable.ResultOf("name length", func(actor core.Actor) (int, error) {
+	nameLengthQuestion := answerable.ResultOf("name length", func(actor core.Actor, ctx context.Context) (int, error) {
 		return len(actor.Name()), nil
 	})
 
@@ -191,7 +192,7 @@ func TestResultOfWithActor(t *testing.T) {
 
 // TestResultOfComplexTypes demonstrates using ResultOf with complex data structures
 func TestResultOfComplexTypes(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	test := serenity.NewSerenityTest(context.Background(), t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("ComplexTypeTester")
@@ -205,7 +206,7 @@ func TestResultOfComplexTypes(t *testing.T) {
 	actor.AttemptsTo(
 		// Create and validate a struct
 		ensure.That(
-			answerable.ResultOf("user creation", func(actor core.Actor) (User, error) {
+			answerable.ResultOf("user creation", func(actor core.Actor, ctx context.Context) (User, error) {
 				return User{
 					Name:  "John Doe",
 					Age:   30,
@@ -217,7 +218,7 @@ func TestResultOfComplexTypes(t *testing.T) {
 
 		// Work with slices
 		ensure.That(
-			answerable.ResultOf("user names list", func(actor core.Actor) ([]string, error) {
+			answerable.ResultOf("user names list", func(actor core.Actor, ctx context.Context) ([]string, error) {
 				users := []User{
 					{Name: "Alice", Age: 25, Email: "alice@example.com"},
 					{Name: "Bob", Age: 30, Email: "bob@example.com"},
@@ -242,7 +243,7 @@ func TestResultOfComplexTypes(t *testing.T) {
 
 		// Work with maps
 		ensure.That(
-			answerable.ResultOf("user data map", func(actor core.Actor) (map[string]interface{}, error) {
+			answerable.ResultOf("user data map", func(actor core.Actor, ctx context.Context) (map[string]interface{}, error) {
 				return map[string]interface{}{
 					"name":    "Jane Doe",
 					"age":     28,
@@ -260,7 +261,7 @@ func TestResultOfComplexTypes(t *testing.T) {
 
 		// Pointer operations
 		ensure.That(
-			answerable.ResultOf("pointer to string", func(actor core.Actor) (*string, error) {
+			answerable.ResultOf("pointer to string", func(actor core.Actor, ctx context.Context) (*string, error) {
 				message := "Hello from pointer"
 				return &message, nil
 			}),
@@ -276,7 +277,7 @@ func TestResultOfComplexTypes(t *testing.T) {
 
 // TestResultOfMixedWithStatic demonstrates mixing ResultOf with ValueOf
 func TestResultOfMixedWithStatic(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	test := serenity.NewSerenityTest(context.Background(), t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("MixedTester")
@@ -288,7 +289,7 @@ func TestResultOfMixedWithStatic(t *testing.T) {
 
 		// Dynamic calculation using static values
 		ensure.That(
-			answerable.ResultOf("double calculation", func(actor core.Actor) (int, error) {
+			answerable.ResultOf("double calculation", func(actor core.Actor, ctx context.Context) (int, error) {
 				staticValue := 42
 				return staticValue * 2, nil
 			}),
@@ -297,7 +298,7 @@ func TestResultOfMixedWithStatic(t *testing.T) {
 
 		// Complex calculation
 		ensure.That(
-			answerable.ResultOf("complex math", func(actor core.Actor) (int, error) {
+			answerable.ResultOf("complex math", func(actor core.Actor, ctx context.Context) (int, error) {
 				a := 10
 				b := 20
 				c := a + b  // 30
@@ -310,7 +311,7 @@ func TestResultOfMixedWithStatic(t *testing.T) {
 
 		// String operations
 		ensure.That(
-			answerable.ResultOf("string building", func(actor core.Actor) (string, error) {
+			answerable.ResultOf("string building", func(actor core.Actor, ctx context.Context) (string, error) {
 				parts := []string{"Hello", "from", "ResultOf"}
 				result := ""
 				for i, part := range parts {
@@ -328,7 +329,7 @@ func TestResultOfMixedWithStatic(t *testing.T) {
 
 // TestResultOfEdgeCases demonstrates edge cases and special scenarios
 func TestResultOfEdgeCases(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	test := serenity.NewSerenityTest(context.Background(), t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("EdgeCaseTester")
@@ -336,7 +337,7 @@ func TestResultOfEdgeCases(t *testing.T) {
 	actor.AttemptsTo(
 		// Empty slice
 		ensure.That(
-			answerable.ResultOf("empty slice", func(actor core.Actor) ([]int, error) {
+			answerable.ResultOf("empty slice", func(actor core.Actor, ctx context.Context) ([]int, error) {
 				return []int{}, nil
 			}),
 			expectations.Equals([]int{}),
@@ -344,7 +345,7 @@ func TestResultOfEdgeCases(t *testing.T) {
 
 		// Nil pointer
 		ensure.That(
-			answerable.ResultOf("nil pointer", func(actor core.Actor) (*int, error) {
+			answerable.ResultOf("nil pointer", func(actor core.Actor, ctx context.Context) (*int, error) {
 				return nil, nil
 			}),
 			expectations.Equals((*int)(nil)),
@@ -352,7 +353,7 @@ func TestResultOfEdgeCases(t *testing.T) {
 
 		// Empty string
 		ensure.That(
-			answerable.ResultOf("empty string", func(actor core.Actor) (string, error) {
+			answerable.ResultOf("empty string", func(actor core.Actor, ctx context.Context) (string, error) {
 				return "", nil
 			}),
 			expectations.Equals(""),
@@ -360,21 +361,21 @@ func TestResultOfEdgeCases(t *testing.T) {
 
 		// Zero values
 		ensure.That(
-			answerable.ResultOf("zero int", func(actor core.Actor) (int, error) {
+			answerable.ResultOf("zero int", func(actor core.Actor, ctx context.Context) (int, error) {
 				return 0, nil
 			}),
 			expectations.Equals(0),
 		),
 
 		ensure.That(
-			answerable.ResultOf("zero float", func(actor core.Actor) (float64, error) {
+			answerable.ResultOf("zero float", func(actor core.Actor, ctx context.Context) (float64, error) {
 				return 0.0, nil
 			}),
 			expectations.Equals(0.0),
 		),
 
 		ensure.That(
-			answerable.ResultOf("zero bool", func(actor core.Actor) (bool, error) {
+			answerable.ResultOf("zero bool", func(actor core.Actor, ctx context.Context) (bool, error) {
 				return false, nil
 			}),
 			expectations.Equals(false),

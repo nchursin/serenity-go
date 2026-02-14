@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestConsoleReportingDemo(t *testing.T) {
 	// Create custom console reporter with different output
 	reporter := console_reporter.NewConsoleReporter()
 
-	test := serenity.NewSerenityTestWithReporter(t, reporter)
+	test := serenity.NewSerenityTestWithReporter(context.Background(), t, reporter)
 	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("DemoAPITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))
@@ -48,7 +49,7 @@ func TestReportingToFile(t *testing.T) {
 	reporter := console_reporter.NewConsoleReporter()
 	reporter.SetOutput(file)
 
-	test := serenity.NewSerenityTestWithReporter(t, reporter)
+	test := serenity.NewSerenityTestWithReporter(context.Background(), t, reporter)
 	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("FileReporter").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))

@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"testing"
 
 	"go.uber.org/mock/gomock"
@@ -31,7 +32,7 @@ func TestIntentionalFailure(t *testing.T) {
 	mockCtx.EXPECT().Errorf(gomock.Any(), gomock.Any()).Times(1)
 
 	// Create SerenityTest with mock context
-	test := serenity.NewSerenityTest(mockCtx)
+	test := serenity.NewSerenityTest(context.Background(), mockCtx)
 	defer test.Shutdown()
 
 	apiTester := test.ActorCalled("APITester").WhoCan(api.CallAnApiAt("https://jsonplaceholder.typicode.com"))

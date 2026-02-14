@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -14,7 +15,8 @@ import (
 // TestAnswerableWithEnsure demonstrates the complete integration of answerable.ValueOf
 // with ensure.That() assertions using the new TestContext API.
 func TestAnswerableWithEnsure(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	ctx := context.Background()
+	test := serenity.NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
@@ -51,7 +53,8 @@ func TestAnswerableWithEnsure(t *testing.T) {
 // TestAnswerableDescriptionFormats demonstrates the description formats
 // that answerable.ValueOf generates for different types.
 func TestAnswerableDescriptionFormats(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	ctx := context.Background()
+	test := serenity.NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 
 	actor := test.ActorCalled("TestActor")
@@ -91,7 +94,7 @@ func (d *descriptionTestActivity) Description() string {
 	return "verify description format"
 }
 
-func (d *descriptionTestActivity) PerformAs(actor core.Actor) error {
+func (d *descriptionTestActivity) PerformAs(actor core.Actor, ctx context.Context) error {
 	// This is a meta-test to verify descriptions work correctly
 	// In real usage, descriptions appear in test output
 	return nil

@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -221,7 +222,7 @@ func ReadFile(path string) *ReadFileActivity {
 	return &ReadFileActivity{path: path}
 }
 
-func (r *ReadFileActivity) PerformAs(actor core.Actor) error {
+func (r *ReadFileActivity) PerformAs(actor core.Actor, ctx context.Context) error {
 	ability, err := actor.AbilityTo(&fileSystemAbility{})
 	if err != nil {
 		return fmt.Errorf("actor does not have file system ability: %w", err)
@@ -246,7 +247,7 @@ func WriteFile(path string, content string) *WriteFileActivity {
 	return &WriteFileActivity{path: path, content: content}
 }
 
-func (w *WriteFileActivity) PerformAs(actor core.Actor) error {
+func (w *WriteFileActivity) PerformAs(actor core.Actor, ctx context.Context) error {
 	ability, err := actor.AbilityTo(&fileSystemAbility{})
 	if err != nil {
 		return fmt.Errorf("actor does not have file system ability: %w", err)
@@ -274,7 +275,7 @@ func DeleteFile(path string) *DeleteFileActivity {
 	return &DeleteFileActivity{path: path}
 }
 
-func (d *DeleteFileActivity) PerformAs(actor core.Actor) error {
+func (d *DeleteFileActivity) PerformAs(actor core.Actor, ctx context.Context) error {
 	ability, err := actor.AbilityTo(&fileSystemAbility{})
 	if err != nil {
 		return fmt.Errorf("actor does not have file system ability: %w", err)
@@ -304,7 +305,7 @@ func FileContent(path string) *FileContentQuestion {
 	return &FileContentQuestion{path: path}
 }
 
-func (f *FileContentQuestion) AnsweredBy(actor core.Actor) (string, error) {
+func (f *FileContentQuestion) AnsweredBy(actor core.Actor, ctx context.Context) (string, error) {
 	ability, err := actor.AbilityTo(&fileSystemAbility{})
 	if err != nil {
 		return "", fmt.Errorf("actor does not have file system ability: %w", err)
@@ -327,7 +328,7 @@ func FileExists(path string) *FileExistsQuestion {
 	return &FileExistsQuestion{path: path}
 }
 
-func (f *FileExistsQuestion) AnsweredBy(actor core.Actor) (bool, error) {
+func (f *FileExistsQuestion) AnsweredBy(actor core.Actor, ctx context.Context) (bool, error) {
 	ability, err := actor.AbilityTo(&fileSystemAbility{})
 	if err != nil {
 		return false, fmt.Errorf("actor does not have file system ability: %w", err)
@@ -344,7 +345,8 @@ func (f *FileExistsQuestion) Description() string {
 // Tests for FileSystemAbility
 
 func TestFileSystemAbility_BasicOperations(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	ctx := context.Background()
+	test := serenity.NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 	tempDir := t.TempDir()
 	actor := test.ActorCalled("FileTester").WhoCan(ManageFilesIn(tempDir))
@@ -355,17 +357,17 @@ func TestFileSystemAbility_BasicOperations(t *testing.T) {
 		WriteFile("test.txt", testContent),
 	)
 
-	content, err := FileContent("test.txt").AnsweredBy(actor)
+	content, err := FileContent("test.txt").AnsweredBy(actor, ctx)
 	require.NoError(t, err)
 	require.Equal(t, testContent, content)
 
 	// Test file existence
-	exists, err := FileExists("test.txt").AnsweredBy(actor)
+	exists, err := FileExists("test.txt").AnsweredBy(actor, ctx)
 	require.NoError(t, err)
 	require.True(t, exists)
 
 	// Test non-existent file
-	exists, err = FileExists("nonexistent.txt").AnsweredBy(actor)
+	exists, err = FileExists("nonexistent.txt").AnsweredBy(actor, ctx)
 	require.NoError(t, err)
 	require.False(t, exists)
 
@@ -375,13 +377,14 @@ func TestFileSystemAbility_BasicOperations(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	exists, err = FileExists("test.txt").AnsweredBy(actor)
+	exists, err = FileExists("test.txt").AnsweredBy(actor, ctx)
 	require.NoError(t, err)
 	require.False(t, exists)
 }
 
 func TestFileSystemAbility_DirectoryOperations(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	ctx := context.Background()
+	test := serenity.NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 	tempDir := t.TempDir()
 	actor := test.ActorCalled("DirectoryTester").WhoCan(ManageFilesIn(tempDir))
@@ -398,9 +401,8 @@ func TestFileSystemAbility_DirectoryOperations(t *testing.T) {
 	actor.AttemptsTo(
 		WriteFile("testdir/nested.txt", "nested content"),
 	)
-	require.NoError(t, err)
 
-	exists, err := FileExists("testdir/nested.txt").AnsweredBy(actor)
+	exists, err := FileExists("testdir/nested.txt").AnsweredBy(actor, ctx)
 	require.NoError(t, err)
 	require.True(t, exists)
 }
@@ -533,7 +535,8 @@ func TestFileSystemAbility_ConcurrentAccess(t *testing.T) {
 
 // Integration test showing FileSystemAbility working with other abilities
 func TestFileSystemAbility_WithAPIIntegration(t *testing.T) {
-	test := serenity.NewSerenityTest(t)
+	ctx := context.Background()
+	test := serenity.NewSerenityTest(ctx, t)
 	defer test.Shutdown()
 	tempDir := t.TempDir()
 	actor := test.ActorCalled("IntegrationTester").WhoCan(
@@ -547,7 +550,7 @@ func TestFileSystemAbility_WithAPIIntegration(t *testing.T) {
 	)
 
 	// Save API response to file
-	responseBody, err := api.LastResponseBody{}.AnsweredBy(actor)
+	responseBody, err := api.LastResponseBody{}.AnsweredBy(actor, ctx)
 	require.NoError(t, err)
 
 	actor.AttemptsTo(
@@ -555,7 +558,7 @@ func TestFileSystemAbility_WithAPIIntegration(t *testing.T) {
 	)
 
 	// Verify file was created and contains expected data
-	fileContent, err := FileContent("post.json").AnsweredBy(actor)
+	fileContent, err := FileContent("post.json").AnsweredBy(actor, ctx)
 	require.NoError(t, err)
 	require.Contains(t, fileContent, "sunt aut facere")
 	require.Contains(t, fileContent, "quia et suscipit")
